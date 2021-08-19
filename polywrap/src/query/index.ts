@@ -5,7 +5,7 @@ import {
   Ipfs_Query,
   Input_getLastNftData,
   GraphNode_Query,
-  Input_query,
+  Input_queryGraphNode,
 } from "./w3";
 
 import { BigInt } from "@web3api/wasm-as"
@@ -13,7 +13,7 @@ import { BigInt } from "@web3api/wasm-as"
 const SUBGRAPH_API_URL =
   'http://127.0.0.1:8000/subgraphs/name/squadgames/squad-POC-subgraph'
 
-export function queryGraphNode(input: Input_query): any {
+export function queryGraphNode(input: Input_queryGraphNode): any {
   const res = GraphNode_Query.querySubgraph(SUBGRAPH_API_URL, input.query)
   return JSON.parse(res)
 }

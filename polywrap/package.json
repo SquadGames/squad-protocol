@@ -14,16 +14,16 @@
     "constants:local": "NETWORK=localhost node ./scripts/get-constants.js"
   },
   "devDependencies": {
-    "@web3api/cli": "0.0.1-prealpha.30",
-    "@web3api/ethereum-plugin-js": "0.0.1-prealpha.30",
-    "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.30",
-    "@web3api/wasm-as": "0.0.1-prealpha.30",
+    "@web3api/cli": "0.0.1-prealpha.33",
+    "@web3api/ethereum-plugin-js": "0.0.1-prealpha.33",
+    "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.33",
+    "@web3api/wasm-as": "0.0.1-prealpha.33",
     "assemblyscript": "0.19.1",
     "ethers": "5.0.7",
     "solc": "0.8.3",
     "ts-standard": "^10.0.0"
   },
   "dependencies": {
-    "@web3api/graph-node-plugin-js": "^0.0.1-prealpha.32"
+    "@web3api/graph-node-plugin-js": "^0.0.1-prealpha.33"
   }
 }
