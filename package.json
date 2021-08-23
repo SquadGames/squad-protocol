@@ -15,27 +15,19 @@
     "lib"
   ],
   "scripts": {
-
     "up": "./scripts/up_dev.sh && yarn build && yarn deploy",
     "down": "./scripts/down_dev.sh",
-
     "build": "./scripts/build.sh",
-
     "reset": "yarn clean && yarn",
     "clean": "npx rimraf ./**/node_modules ./**/build ./**/coverage ./**/.w3",
-
     "deploy": "./scripts/deploy.sh",
-
     "lint": "./scripts/lint.sh",
     "format": "./scripts/format.sh",
-
     "test": "yarn test:hardhat && yarn test:polywrap && yarn test:subgraph",
     "test:hardhat": "yarn workspace @squad/hardhat test:local",
     "test:polywrap": "yarn workspace @squad/polywrap test",
     "test:subgraph": "yarn workspace @squad/subgraph test",
     "test:lib": "yarn workspace @squad/lib test",
-
     "todos": "git grep TODO ':!package.json'"
-
   }
 }
