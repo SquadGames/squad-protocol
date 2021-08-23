@@ -10,17 +10,25 @@
     "deploy": "npx w3 build --ipfs http://localhost:5001 --test-ens squadprotocol.eth",
     "lint": "echo 'linting for assemblyscript is not mature. Not implemented'",
     "format": "echo 'linting for assemblyscript is not mature. Not implemented'",
-    "test": "yarn constants:local && npx w3 query ./recipes/e2e.json && yarn lint",
+    "test": "jest",
+    "test:old": "yarn constants:local && npx w3 query ./recipes/e2e.json && yarn lint",
     "constants:local": "NETWORK=localhost node ./scripts/get-constants.js"
   },
   "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/jest": "^27.0.1",
     "@web3api/cli": "0.0.1-prealpha.33",
     "@web3api/ethereum-plugin-js": "0.0.1-prealpha.33",
     "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.33",
     "@web3api/wasm-as": "0.0.1-prealpha.33",
     "assemblyscript": "0.19.1",
+    "babel-jest": "^27.0.6",
     "ethers": "5.0.7",
+    "jest": "^27.0.6",
     "solc": "0.8.3",
+    "ts-jest": "^27.0.5",
     "ts-standard": "^10.0.0"
   },
   "dependencies": {
