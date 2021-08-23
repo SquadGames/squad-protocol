@@ -8,7 +8,7 @@ dataSources:
     name: ERC721Squad
     network: mainnet
     source:
-      address: '0xDb56f2e9369E0D7bD191099125a3f6C370F8ed15'
+      address: '0xCfEB869F69431e42cdB54A4F4f105C19C080A601'
       abi: ERC721Squad
     mapping:
       kind: ethereum/events
@@ -27,7 +27,7 @@ dataSources:
     name: PurchasableLicenseManager
     network: mainnet
     source:
-      address: '0x6eD79Aa1c71FD7BdBC515EfdA3Bd4e26394435cC'
+      address: '0xC89Ce4735882C9F0f0FE26686c53074E09B0D550'
       abi: PurchasableLicenseManager
     mapping:
       kind: ethereum/events
@@ -53,7 +53,7 @@ dataSources:
     name: RevShareLicenseManager
     network: mainnet
     source:
-      address: '0xA94B7f0465E98609391C623d0560C5720a3f2D33'
+      address: '0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B'
       abi: RevShareLicenseManager
     mapping:
       kind: ethereum/events
@@ -76,7 +76,7 @@ dataSources:
     name: Royalties
     network: mainnet
     source:
-      address: '0x0E696947A06550DEf604e82C26fd9E493e576337'
+      address: '0x5b1869D9A4C187F2EAa108f3062412ecf0526b24'
       abi: Royalties
     mapping:
       kind: ethereum/events
