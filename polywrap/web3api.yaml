@@ -12,4 +12,4 @@ modules:
 
 import_redirects:
   - uri: "ens/graph-node.web3api.eth"
-    schema: ./graph-node/schema.graphql
+    schema: ../node_modules/@web3api/graph-node-plugin-js/schema.graphql
