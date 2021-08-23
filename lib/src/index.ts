@@ -21,10 +21,13 @@ export interface SquadProtocolSecrets {
   deployPrivateKey: string
 }
 
-const latestConfigPath = path.resolve(path.join('..', 'squad-config.json'))
+function getLatestConfigPath (): string {
+  return process.env.SQUAD_CONFIG_PATH ??
+    path.resolve(path.join('..', 'squad-config.json'))
+}
 
-export function getConfig (path = latestConfigPath): any {
-  return JSON.parse(fs.readFileSync(path).toString())
+export function getConfig (): any {
+  return JSON.parse(fs.readFileSync(getLatestConfigPath()).toString())
 }
 
 export function writeConfig (config: SquadProtocolConfig, id = 'default'): void {
@@ -37,7 +40,7 @@ export function writeConfig (config: SquadProtocolConfig, id = 'default'): void 
   )
   const data = JSON.stringify(config)
   fs.writeFileSync(configPath, data)
-  fs.writeFileSync(latestConfigPath, data)
+  fs.writeFileSync(getLatestConfigPath(), data)
 }
 
 export function getSecrets (): any {
