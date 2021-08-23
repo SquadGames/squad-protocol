@@ -21,6 +21,9 @@
 
     "build": "./scripts/build.sh",
 
+    "reset": "yarn clean && yarn",
+    "clean": "npx rimraf ./**/node_modules ./**/build ./**/coverage ./**/.w3",
+
     "deploy": "./scripts/deploy.sh",
 
     "lint": "./scripts/lint.sh",

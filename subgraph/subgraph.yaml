@@ -8,7 +8,7 @@ dataSources:
     name: ERC721Squad
     network: mainnet
     source:
-      address: '0x64d2ec8fA603B3Ad18b7a4529bDae42064994953'
+      address: '0xFF6049B87215476aBf744eaA3a476cBAd46fB1cA'
       abi: ERC721Squad
     mapping:
       kind: ethereum/events
@@ -18,7 +18,7 @@ dataSources:
         - SquadNFT
       abis:
         - name: ERC721Squad
-          file: /Users/ezra/workspace/Squad/squad-protocol/hardhat/artifacts/contracts/ERC721Squad.sol/ERC721Squad.json
+          file: /home/jesse/projects/SquadGames/squad-protocol/hardhat/artifacts/contracts/ERC721Squad.sol/ERC721Squad.json
       eventHandlers:
         - event: TokenMinted(uint256,address,string,string,bytes32,bytes32)
           handler: handleTokenMinted
@@ -27,7 +27,7 @@ dataSources:
     name: PurchasableLicenseManager
     network: mainnet
     source:
-      address: '0x07a0af4d3a099e6d97955Ef811132794CB686358'
+      address: '0x2D8BE6BF0baA74e0A907016679CaE9190e80dD0A'
       abi: PurchasableLicenseManager
     mapping:
       kind: ethereum/events
@@ -40,7 +40,7 @@ dataSources:
         - PurchaseEvent
       abis:
         - name: PurchasableLicenseManager
-          file: /Users/ezra/workspace/Squad/squad-protocol/hardhat/artifacts/contracts/PurchasableLicenseManager.sol/PurchasableLicenseManager.json
+          file: /home/jesse/projects/SquadGames/squad-protocol/hardhat/artifacts/contracts/PurchasableLicenseManager.sol/PurchasableLicenseManager.json
       eventHandlers:
         - event: NFTRegistered(address,uint256,address,uint256,uint8,address)
           handler: handleNFTRegistered
@@ -53,7 +53,7 @@ dataSources:
     name: RevShareLicenseManager
     network: mainnet
     source:
-      address: '0xb55C7377F4F902aDC6088Ef5941F7c7EC7F926e5'
+      address: '0xA586074FA4Fe3E546A132a16238abe37951D41fE'
       abi: RevShareLicenseManager
     mapping:
       kind: ethereum/events
@@ -65,7 +65,7 @@ dataSources:
         - RevShareLicense
       abis:
         - name: RevShareLicenseManager
-          file: /Users/ezra/workspace/Squad/squad-protocol/hardhat/artifacts/contracts/RevShareLicenseManager.sol/RevShareLicenseManager.json
+          file: /home/jesse/projects/SquadGames/squad-protocol/hardhat/artifacts/contracts/RevShareLicenseManager.sol/RevShareLicenseManager.json
       eventHandlers:
         - event: NFTRegistered(address,uint256,address,uint8)
           handler: handleNFTRegistered
@@ -76,7 +76,7 @@ dataSources:
     name: Royalties
     network: mainnet
     source:
-      address: '0x69774E9A4a003B3576e27BB0BA687b4267657604'
+      address: '0x86072CbFF48dA3C1F01824a6761A03F105BCC697'
       abi: Royalties
     mapping:
       kind: ethereum/events
@@ -87,7 +87,7 @@ dataSources:
         - Transfer
       abis:
         - name: Royalties
-          file: /Users/ezra/workspace/Squad/squad-protocol/hardhat/artifacts/contracts/Royalties.sol/Royalties.json
+          file: /home/jesse/projects/SquadGames/squad-protocol/hardhat/artifacts/contracts/Royalties.sol/Royalties.json
       eventHandlers:
         - event: WindowIncremented(uint256,uint256,uint256,bytes32)
           handler: handleWindowIncremented

@@ -55,5 +55,11 @@
       "address": "$ERC721Squad",
       "network": "testnet"
     }
+  },
+  {
+    "query": "./query.graphql",
+    "variables": {
+      "query": "{  squadNFTs {    creator    blockCreated  }}"
+    }
   }
 ]

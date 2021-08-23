@@ -3,10 +3,20 @@ import {
   Input_balanceOf,
   Input_allowance,
   Ipfs_Query,
-  Input_getLastNftData
+  Input_getLastNftData,
+  GraphNode_Query,
+  Input_queryGraphNode,
 } from "./w3";
 
 import { BigInt } from "@web3api/wasm-as"
+
+const SUBGRAPH_API_URL =
+  'http://127.0.0.1:8000/subgraphs/name/squadgames/squad-POC-subgraph'
+
+export function queryGraphNode(input: Input_queryGraphNode): any {
+  const res = GraphNode_Query.querySubgraph(SUBGRAPH_API_URL, input.query)
+  return JSON.parse(res)
+}
 
 export function balanceOf(input: Input_balanceOf): BigInt {
   const res = Ethereum_Query.callContractView({

@@ -1,0 +1,3 @@
+query queryGraphNode($query: String!) {
+  queryGraphNode(query: $query)
+}
