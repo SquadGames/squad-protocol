@@ -53,7 +53,7 @@ async function getClient() {
       {
         uri: 'ens/graph-node.web3api.eth',
         plugin: graphNodePlugin({
-          provider: "http://127.0.0.1:8000/"
+          provider: "http://localhost:8000"
         })
       }
     ]
@@ -69,8 +69,9 @@ test("client can query the graph", async () => {
   const response = await client.query({
     uri: '/ens/testnet/squadprotocol.eth',
     query: `query queryGraphNode {
-queryGraphNode(query: "{  squadNFTs {    creator    blockCreated  }}")
+queryGraphNode(query: "{squadNFTs {id}}")
 }`
   })
   expect(response.errors).toBe(undefined)
+  expect(response?.data?.queryGraphNode).toBe('{"data":{"squadNFTs":[]}}')
 })
