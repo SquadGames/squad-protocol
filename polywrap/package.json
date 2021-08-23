@@ -6,7 +6,7 @@
   "scripts": {
     "up": "npx w3 test-env up",
     "down": "npx w3 test-env down",
-    "build": "echo 'polywrap builds and deploys in one step, it'll build on deploy",
+    "build": "echo 'build in deploy'",
     "deploy": "npx w3 build --ipfs http://localhost:5001 --test-ens squadprotocol.eth",
     "lint": "echo 'linting for assemblyscript is not mature. Not implemented'",
     "format": "echo 'linting for assemblyscript is not mature. Not implemented'",
