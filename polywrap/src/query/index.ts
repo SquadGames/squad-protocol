@@ -13,10 +13,12 @@ import { BigInt } from "@web3api/wasm-as"
 const SUBGRAPH_API_URL =
   'http://127.0.0.1:8000/subgraphs/name/squadgames/squad-POC-subgraph'
 
-export function queryGraphNode(input: Input_queryGraphNode): string {
-  const res = GraphNode_Query.querySubgraph(
-    { subgraphId: SUBGRAPH_API_URL, query: input.query }
-  )
+export function queryGraphNode(input: Input_queryGraphNode): String {
+  const res = GraphNode_Query.querySubgraph({
+    subgraphAuthor: "squadgames",
+    subgraphName: "squad-POC-subgraph",
+    query: input.query
+  })
   return res
 }
 
