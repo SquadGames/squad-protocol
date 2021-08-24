@@ -1,8 +1,7 @@
-import { store, Address, BigInt } from "@graphprotocol/graph-ts"
+import { store, Address, BigInt, json, ByteArray, Bytes, log, JSONValueKind } from "@graphprotocol/graph-ts"
 import { NFTRegistered, NFTUnregistered, Purchase } 
   from '../../generated/PurchasableLicenseManager/PurchasableLicenseManager'
 import { Content, PurchasableLicense, PurchaseEvent } from '../../generated/schema'
-import { getType } from '../utils'
 
 function makeContentId(address: Address, id: BigInt): string {
   return address.toHex() + '-' + id.toHex()
@@ -21,7 +20,23 @@ export function handleNFTRegistered(event: NFTRegistered): void {
     content.nftAddress = event.params.nftAddress
     content.nftId = event.params.nftId
   }
-  content.type = getType(event.params.data)
+
+  let result = json.try_fromBytes(
+    ByteArray.fromUTF8(event.params.data) as Bytes
+  )
+  if (result.isError) { 
+    log.warning("Failed to parse JSON", [])
+    return
+  }
+
+  let object = result.value.toObject()
+  let typeValue = object.get("type")
+  if (typeValue.kind != JSONValueKind.STRING) { 
+    log.warning("Skipping post: missing valid Postum 'type' field", [])
+    return
+  }
+  content.type = typeValue.toString()
+  
   content.save()
 
   let licenseId = makeLicenseId(contentId, event.address)
