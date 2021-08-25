@@ -16,7 +16,7 @@ import { ERC20Mintable } from '../typechain/ERC20Mintable'
 import { ERC20Mintable__factory } from '../typechain/factories/ERC20Mintable__factory'
 import { Royalties } from '../typechain/Royalties'
 import { Royalties__factory } from '../typechain/factories/Royalties__factory'
-import BalanceTree from '../lib/balance-tree'
+import { MerkleTree, Balance, createBalanceTree, getHexProof, verifyProof } from '@squad/lib/'
 
 describe('Royalties', () => {
   /**
@@ -38,27 +38,27 @@ describe('Royalties', () => {
 
   const PERCENTAGE_SCALE = 10e5
 
-  async function getTree (): Promise<BalanceTree> {
+  async function getTree (): Promise<MerkleTree> {
     const signers = [owner, alice, bob, charlie, dia]
-    const balances = []
+    const balances: Balance[] = []
     for (let i = 0; i <= 4; i++) {
       balances.push({
         account: await signers[i].getAddress(),
         allocation: ethers.BigNumber.from(20 * PERCENTAGE_SCALE)
       })
     }
-    return new BalanceTree(balances)
+    return createBalanceTree(balances)
   }
 
   async function windowAndProof (address: string, share: number): Promise<string[]> {
-    const balanceTree: BalanceTree = await getTree()
+    const balanceTree: MerkleTree = await getTree()
     const hexRoot = balanceTree.getHexRoot()
 
     await royalties.incrementWindow(hexRoot)
 
-    const proof = balanceTree.getHexProof(
-      address,
-      ethers.BigNumber.from(share)
+    const proof = getHexProof(
+      balanceTree,
+      { account: address, allocation: ethers.BigNumber.from(share) }
     )
 
     return proof
@@ -90,7 +90,8 @@ describe('Royalties', () => {
 
   it('on incrementWindow, updates state and emits event properly', async () => {
     // rev share tree
-    const balanceTree: BalanceTree = await getTree()
+    const balanceTree: MerkleTree = await getTree()
+    console.log('root', balanceTree.getHexRoot())
     const hexRoot = balanceTree.getHexRoot()
 
     // first window

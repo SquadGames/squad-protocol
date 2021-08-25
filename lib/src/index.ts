@@ -2,6 +2,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { homedir } from 'os'
 
+export * from './merkle'
+
 export interface Contract {
   address: string
   abiPath: string
