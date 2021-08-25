@@ -12,7 +12,7 @@ export function handleNFTRegisteredRevShare(event: NFTRegistered): void {
     event.params.data
   )
   if (result.error != "none") {
-    log.error(result.error, [])
+    log.warning(result.error, [])
     return
   }
   let licenseId = result.licenseId
