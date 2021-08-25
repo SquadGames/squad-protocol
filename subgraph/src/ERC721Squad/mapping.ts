@@ -1,7 +1,6 @@
 import { TokenMinted } from '../../generated/ERC721Squad/ERC721Squad'
 import { SquadNFT } from '../../generated/schema'
 
-// should now create NFT and SquadNftData, not SquadNFT
 export function handleTokenMinted(event: TokenMinted): void {
   let nft = new SquadNFT(event.params.tokenId.toString())
   nft.creator = event.params.creator
