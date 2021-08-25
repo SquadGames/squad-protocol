@@ -74,7 +74,7 @@ describe('RevShareLicenseManager', () => {
         0,
         await alice.getAddress(),
         20,
-        "type"
+        'type'
       ))
         .to.emit(revShareLicense, 'NFTRegistered')
 
@@ -92,7 +92,7 @@ describe('RevShareLicenseManager', () => {
         0,
         await alice.getAddress(),
         101,
-        "type"
+        'type'
       ))
         .to.be.revertedWith('minSharePercentage greater than 100.')
     })
@@ -105,7 +105,7 @@ describe('RevShareLicenseManager', () => {
         0,
         await owner.getAddress(),
         20,
-        "type"
+        'type'
       ))
         .to.be.revertedWith('Registrant does not own NFT.')
     })
@@ -121,7 +121,7 @@ describe('RevShareLicenseManager', () => {
         tokenData.contentHash,
         tokenData.metadataHash,
         50,
-        "type"
+        'type'
       ))
         .to.emit(revShareLicense, 'NFTRegistered')
         .withArgs(
@@ -129,7 +129,7 @@ describe('RevShareLicenseManager', () => {
           0,
           await alice.getAddress(),
           ethers.BigNumber.from(50),
-          "type"
+          'type'
         )
 
       const owner = await squadNft.ownerOf(0)
@@ -149,7 +149,7 @@ describe('RevShareLicenseManager', () => {
         0,
         await alice.getAddress(),
         20,
-        "type"
+        'type'
       )
 
       await expect(licenseAlice.unregisterNFT(
@@ -180,7 +180,7 @@ describe('RevShareLicenseManager', () => {
         0,
         await alice.getAddress(),
         20,
-        "type"
+        'type'
       )
 
       await expect(revShareLicense.unregisterNFT(
