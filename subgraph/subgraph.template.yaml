@@ -42,8 +42,8 @@ dataSources:
         - name: PurchasableLicenseManager
           file: {{{contracts.PurchasableLicenseManager.abiPath}}}
       eventHandlers:
-        - event: NFTRegistered(address,uint256,address,uint256,uint8,address)
-          handler: handleNFTRegistered
+        - event: NFTRegistered(address,uint256,address,uint256,uint8,address,string)
+          handler: handleNFTRegisteredPurchasable
         - event: NFTUnregistered(address,uint256)
           handler: handleNFTUnregistered
         - event: Purchase(address,uint256,address,uint256,uint256,address)
@@ -67,8 +67,8 @@ dataSources:
         - name: RevShareLicenseManager
           file: {{{contracts.RevShareLicenseManager.abiPath}}}
       eventHandlers:
-        - event: NFTRegistered(address,uint256,address,uint8)
-          handler: handleNFTRegistered
+        - event: NFTRegistered(address,uint256,address,uint8,string)
+          handler: handleNFTRegisteredRevShare
         - event: NFTUnregistered(address,uint256)
           handler: handleNFTUnregistered
       file: ./src/RevShareLicenseManager/mapping.ts

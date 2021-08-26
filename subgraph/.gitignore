@@ -2,3 +2,4 @@ build
 generated
 data
 config/subgraphConfig.json
+subgraph.yaml
