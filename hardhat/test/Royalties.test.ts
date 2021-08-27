@@ -17,6 +17,7 @@ import { ERC20Mintable__factory } from '../typechain/factories/ERC20Mintable__fa
 import { Royalties } from '../typechain/Royalties'
 import { Royalties__factory } from '../typechain/factories/Royalties__factory'
 import { MerkleTree, makeMerkleTree, getHexRoot, getHexProof } from '@squad/lib/'
+import { toLeaf, toHexLeaf } from '../lib/merkleTools'
 
 describe('Royalties', () => {
   /**
@@ -37,24 +38,6 @@ describe('Royalties', () => {
   let royalties: Royalties
 
   const PERCENTAGE_SCALE = 10e5
-
-  interface Balance {
-    account: string
-    allocation: ethersTypes.BigNumber
-  }
-
-  function toHexLeaf (balance: Balance): string {
-    return ethers.utils
-      .solidityKeccak256(['address', 'uint256'], [balance.account, balance.allocation])
-      .substr(2)
-  }
-
-  function toLeaf (balance: Balance): Buffer {
-    return Buffer.from(
-      toHexLeaf(balance),
-      'hex'
-    )
-  }
 
   async function getTree (): Promise<MerkleTree> {
     const signers = [owner, alice, bob, charlie, dia]
