@@ -18,7 +18,8 @@ contract RevShareLicenseManager is LicenseManager {
         address nftAddress, 
         uint256 nftId, 
         address registrant,
-        uint8 minSharePercentage
+        uint8 minSharePercentage,
+        string data
     );
 
     event NFTUnregistered(
@@ -39,7 +40,8 @@ contract RevShareLicenseManager is LicenseManager {
         address nftAddress, 
         uint256 nftId, 
         address registrant,
-        uint8 minSharePercentage
+        uint8 minSharePercentage,
+        string calldata data
     ) 
         public
     {
@@ -53,7 +55,8 @@ contract RevShareLicenseManager is LicenseManager {
             nftAddress, 
             nftId, 
             registrant,
-            minSharePercentage
+            minSharePercentage,
+            data
         );
     }
 
@@ -66,7 +69,8 @@ contract RevShareLicenseManager is LicenseManager {
         string calldata metadataURI,
         bytes32 contentHash,
         bytes32 metadataHash,
-        uint8 minSharePercentage
+        uint8 minSharePercentage,
+        string calldata data
     ) external {
         uint256 nftId = squadNft.mint(
             creator, 
@@ -75,7 +79,12 @@ contract RevShareLicenseManager is LicenseManager {
             contentHash,
             metadataHash
         );
-        registerNFT(address(squadNft), nftId, creator, minSharePercentage);
+        registerNFT(
+            address(squadNft), 
+            nftId, creator, 
+            minSharePercentage, 
+            data
+        );
     }
 
     function unregisterNFT(address nftAddress, uint256 nftId) 

@@ -87,7 +87,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         ethers.utils.parseEther('10'),
-        50
+        50,
+        'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
 
@@ -116,7 +117,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         ethers.utils.parseEther('10'),
-        50
+        50,
+        'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
 
@@ -127,7 +129,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         ethers.utils.parseEther('11'),
-        51
+        51,
+        'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
 
@@ -151,7 +154,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        101
+        101,
+        'type'
       ))
         .to.be.revertedWith('sharePercentage greater than 100.')
     })
@@ -164,7 +168,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await owner.getAddress(),
         10,
-        50
+        50,
+        'type'
       ))
         .to.be.revertedWith('Registrant does not own NFT.')
     })
@@ -180,7 +185,8 @@ describe('PurchasableLicenseManager', () => {
         tokenData.contentHash,
         tokenData.metadataHash,
         10,
-        50
+        50,
+        'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
 
@@ -203,7 +209,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        50
+        50,
+        'type'
       )
 
       await expect(licenseAlice.unregisterNFT(
@@ -242,7 +249,8 @@ describe('PurchasableLicenseManager', () => {
       0,
       await alice.getAddress(),
       ethers.utils.parseEther('10'),
-      50
+      50,
+      'type'
     )
 
     const ownerAddress = await owner.getAddress()
@@ -288,7 +296,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        50
+        50,
+        'type'
       )
 
       const ownerAddress = await owner.getAddress()
@@ -321,7 +330,8 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        50
+        50,
+        'type'
       )
 
       const ownerAddress = await owner.getAddress()

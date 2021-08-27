@@ -37,6 +37,8 @@ export const REV_SHARE_LM_ADDR =
   contracts.RevShareLicenseManager.address.toLowerCase()
 export const DEF_PRICE = ethers.utils.parseEther('10')
 export const DEF_SHARE = 50
+export const DEF_TYPE = 'jpeg'
+export const GRAPH_DELAY = 1500
 
 const provider = ethers.getDefaultProvider(config.networkNameOrUrl)
 
@@ -103,7 +105,7 @@ export interface NFT {
   metadataHash: ethers.BytesLike
 }
 
-export async function delay (ms: number): Promise<void> {
+export async function delay (ms: number = GRAPH_DELAY): Promise<void> {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
@@ -129,35 +131,55 @@ export async function mint (): Promise<NFT> {
   return nft
 }
 
-export async function registerPL (nft: NFT, price: ethers.BigNumber, share: number): Promise<void> {
-  await alicePlm.registerNFT(nft.address, nft.id, signer.address, price, share)
+export async function registerPL (
+  nft: NFT,
+  price: ethers.BigNumber,
+  share: number,
+  type: string
+): Promise<void> {
+  const jsonString = JSON.stringify({ type })
+  await alicePlm.registerNFT(
+    nft.address,
+    nft.id,
+    signer.address,
+    price,
+    share,
+    jsonString
+  )
 }
 
 export async function unregisterPL (nft: NFT): Promise<void> {
   await alicePlm.unregisterNFT(nft.address, nft.id)
-  await delay(5000)
+  await delay()
 }
 
 export async function mintAndRegisterPL (): Promise<NFT> {
   const nft = await mint()
-  await registerPL(nft, DEF_PRICE, DEF_SHARE)
-  await delay(5000)
+  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE)
+  await delay()
   return nft
 }
 
-export async function registerRSL (nft: NFT, share: number): Promise<void> {
-  await aliceRslm.registerNFT(nft.address, nft.id, signer.address, share)
+export async function registerRSL (nft: NFT, share: number, type: string): Promise<void> {
+  const jsonString = JSON.stringify({ type })
+  await aliceRslm.registerNFT(
+    nft.address,
+    nft.id,
+    signer.address,
+    share,
+    jsonString
+  )
 }
 
 export async function unregisterRSL (nft: NFT): Promise<void> {
   await aliceRslm.unregisterNFT(nft.address, nft.id)
-  await delay(5000)
+  await delay()
 }
 
 export async function mintAndRegisterRSL (): Promise<NFT> {
   const nft = await mint()
-  await registerRSL(nft, DEF_SHARE)
-  await delay(5000)
+  await registerRSL(nft, DEF_SHARE, DEF_TYPE)
+  await delay()
   return nft
 }
 
@@ -174,7 +196,7 @@ export async function mintDaiAndPurchase (nft: NFT, price: ethers.BigNumber): Pr
   await aliceFDai.approve(purchasableLicenseManager.address, price)
   const tx = await alicePlm.purchase(nft.address, nft.id, signer.address, 1)
   const res = await tx.wait()
-  await delay(5000)
+  await delay()
   return res.blockNumber
 }
 
@@ -183,7 +205,7 @@ export async function mintAndIncrement (): Promise<number> {
   await aliceFDai.mint(ROYALTIES_ADDR, DEF_PRICE)
   const tx = await aliceRoyalties.incrementWindow(proofInfo.ROOT)
   const res = await tx.wait()
-  await delay(5000)
+  await delay()
   return res.blockNumber
 }
 
@@ -231,7 +253,7 @@ export async function claim (windowIndex: number): Promise<ClaimRes> {
     proofInfo.PROOF
   )
   const res = await tx.wait()
-  await delay(5000)
+  await delay()
   return { tx, res }
 }
 
@@ -270,6 +292,7 @@ export async function queryContent (nft: NFT): Promise<any> {
       id
       nftAddress
       nftId
+      type
       purchasableLicenses {
         id
       }
@@ -319,6 +342,7 @@ export async function queryAllContent (): Promise<any> {
       id
       nftAddress
       nftId
+      type
       purchasableLicenses {
         id
       }

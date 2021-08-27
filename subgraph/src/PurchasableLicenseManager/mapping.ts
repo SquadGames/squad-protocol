@@ -1,32 +1,27 @@
-import { store, Address, BigInt } from "@graphprotocol/graph-ts"
+import { store, log } from "@graphprotocol/graph-ts"
 import { NFTRegistered, NFTUnregistered, Purchase } 
   from '../../generated/PurchasableLicenseManager/PurchasableLicenseManager'
-import { Content, PurchasableLicense, PurchaseEvent } from '../../generated/schema'
+import { PurchasableLicense, PurchaseEvent } from '../../generated/schema'
+import { makeContentId, makeLicenseId, registrationContentAndLicenseId } from '../utils'
 
-function makeContentId(address: Address, id: BigInt): string {
-  return address.toHex() + '-' + id.toHex()
-}
-
-function makeLicenseId(contentId: string, address: Address): string {
-  return contentId + '-' + address.toHex()
-}
-
-export function handleNFTRegistered(event: NFTRegistered): void {
-  let contentId = makeContentId(event.params.nftAddress, event.params.nftId)
-  let content = Content.load(contentId)
-  if (content == null) {
-    content = new Content(contentId)
-    content.nftAddress = event.params.nftAddress
-    content.nftId = event.params.nftId
+export function handleNFTRegisteredPurchasable(event: NFTRegistered): void {
+  let result = registrationContentAndLicenseId(
+    event.address, 
+    event.params.nftAddress,
+    event.params.nftId,
+    event.params.data
+  )
+  if (result.error != "none") {
+    log.warning(result.error, [])
+    return
   }
-  content.save()
+  let licenseId = result.licenseId
 
-  let licenseId = makeLicenseId(contentId, event.address)
   let purchasableLicense = PurchasableLicense.load(licenseId)
   if (purchasableLicense == null) {
     purchasableLicense = new PurchasableLicense(licenseId)
     purchasableLicense.licenseManagerAddress = event.address
-    purchasableLicense.content = contentId
+    purchasableLicense.content = result.contentId
   }
   purchasableLicense.registrant = event.transaction.from
   purchasableLicense.price = event.params.price

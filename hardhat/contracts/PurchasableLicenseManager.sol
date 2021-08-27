@@ -32,7 +32,8 @@ contract PurchasableLicenseManager is LicenseManager {
         address registrant,
         uint256 price, 
         uint8 sharePercentage,
-        address licenseTokenAddress
+        address licenseTokenAddress,
+        string data
     );
 
     event NFTUnregistered(
@@ -70,7 +71,8 @@ contract PurchasableLicenseManager is LicenseManager {
         uint256 nftId, 
         address registrant,
         uint256 price, 
-        uint8 sharePercentage
+        uint8 sharePercentage,
+        string calldata data
     ) 
         public
     {
@@ -94,7 +96,8 @@ contract PurchasableLicenseManager is LicenseManager {
             registrant,
             price,
             sharePercentage,
-            address(licenseToken)
+            address(licenseToken),
+            data
         );
     }
 
@@ -108,7 +111,8 @@ contract PurchasableLicenseManager is LicenseManager {
         bytes32 contentHash,
         bytes32 metadataHash,
         uint256 price, 
-        uint8 sharePercentage
+        uint8 sharePercentage,
+        string calldata data
     ) external {
         uint256 nftId = squadNft.mint(
             creator, 
@@ -117,7 +121,14 @@ contract PurchasableLicenseManager is LicenseManager {
             contentHash,
             metadataHash
         );
-        registerNFT(address(squadNft), nftId, creator, price, sharePercentage);
+        registerNFT(
+            address(squadNft), 
+            nftId, 
+            creator, 
+            price, 
+            sharePercentage, 
+            data
+        );
     }
 
     function unregisterNFT(address nftAddress, uint256 nftId) 
