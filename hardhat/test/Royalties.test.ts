@@ -16,7 +16,8 @@ import { ERC20Mintable } from '../typechain/ERC20Mintable'
 import { ERC20Mintable__factory } from '../typechain/factories/ERC20Mintable__factory'
 import { Royalties } from '../typechain/Royalties'
 import { Royalties__factory } from '../typechain/factories/Royalties__factory'
-import BalanceTree from '../lib/balance-tree'
+import { MerkleTree, makeMerkleTree, getHexRoot, getHexProof } from '@squad/lib/'
+import { toLeaf, toHexLeaf } from '../lib/merkleTools'
 
 describe('Royalties', () => {
   /**
@@ -38,27 +39,30 @@ describe('Royalties', () => {
 
   const PERCENTAGE_SCALE = 10e5
 
-  async function getTree (): Promise<BalanceTree> {
+  async function getTree (): Promise<MerkleTree> {
     const signers = [owner, alice, bob, charlie, dia]
     const balances = []
+    const leaves = []
     for (let i = 0; i <= 4; i++) {
-      balances.push({
+      const balance = {
         account: await signers[i].getAddress(),
         allocation: ethers.BigNumber.from(20 * PERCENTAGE_SCALE)
-      })
+      }
+      balances.push(balance)
+      leaves.push(toLeaf(balance))
     }
-    return new BalanceTree(balances)
+    return makeMerkleTree(leaves)
   }
 
   async function windowAndProof (address: string, share: number): Promise<string[]> {
-    const balanceTree: BalanceTree = await getTree()
-    const hexRoot = balanceTree.getHexRoot()
+    const balanceTree: MerkleTree = await getTree()
+    const hexRoot = getHexRoot(balanceTree)
 
     await royalties.incrementWindow(hexRoot)
 
-    const proof = balanceTree.getHexProof(
-      address,
-      ethers.BigNumber.from(share)
+    const proof = getHexProof(
+      balanceTree,
+      toHexLeaf({ account: address, allocation: ethers.BigNumber.from(share) })
     )
 
     return proof
@@ -90,8 +94,8 @@ describe('Royalties', () => {
 
   it('on incrementWindow, updates state and emits event properly', async () => {
     // rev share tree
-    const balanceTree: BalanceTree = await getTree()
-    const hexRoot = balanceTree.getHexRoot()
+    const balanceTree: MerkleTree = await getTree()
+    const hexRoot = getHexRoot(balanceTree)
 
     // first window
     await expect(royalties.incrementWindow(hexRoot))

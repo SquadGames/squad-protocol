@@ -14,6 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "@types/node": "^16.4.14",
+    "ethereumjs-util": "^7.1.0",
+    "keccak256": "^1.0.3",
     "ts-node": "^10.2.0",
     "typescript": "^4.3.5"
   },
@@ -23,6 +25,7 @@
     "ts-standard": "^10.0.0"
   },
   "jest": {
+    "verbose": true,
     "collectCoverageFrom": [
       "dist/**/*.js"
     ],
