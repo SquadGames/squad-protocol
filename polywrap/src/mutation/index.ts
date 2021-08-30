@@ -1,12 +1,18 @@
 import {
   Ethereum_Mutation,
   Ethereum_TxResponse,
-  Input_mintNFT,
-  Input_approve,
   Ipfs_Mutation
+  Input_mintNFT,
+  Input_registerPurchasableNFTContent,
+  Input_registerRevShareNFTContent,
+  Input_registerPurchasableContent,
+  Input_registerRevShareContent,
+  Input_approve,
 } from "./w3";
 
 import { BigInt } from "@web3api/wasm-as"
+
+import { getConfig } from '@squad/lib'
 
 export function mintNFT(input: Input_mintNFT): Ethereum_TxResponse {
   const contentURI = Ipfs_Mutation.addFile({
@@ -27,6 +33,42 @@ export function mintNFT(input: Input_mintNFT): Ethereum_TxResponse {
   })
 
   return res
+}
+
+export function registerPurchasableNFTContent(
+  input: Input_registerPurchasableNftContent
+): String {
+  Ethereum_Mutation.callContractMethod({
+    connection: input.connection,
+    address: input.licenseManagerAddress,
+    method: "function (address,uint256,address,uint256,uint8,string) returns(uint256)",
+    args:[
+      input.nftAddress,
+      input.nftId,
+      input.registrant,
+      input.price,
+      input.sharePercentage,
+      input.data,
+    ]
+  })
+}
+
+export function registerPurchasableContent(
+  input: Input_registerPurchasableContent
+): String {
+  throw new Error("Not Implemented")
+}
+
+export function registerRevShareNFTContent(
+  input: Input_registerRevShareNFTContent
+): String {
+  throw new Error("Not Implemented")
+}
+
+export function registerRevShareContent(
+  input: Input_registerRevShareContent
+): String {
+  throw new Error("Not Implemented")
 }
 
 export function approve(input: Input_approve): Ethereum_TxResponse {
