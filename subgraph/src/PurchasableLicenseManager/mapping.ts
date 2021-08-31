@@ -5,6 +5,7 @@ import { PurchasableLicense, PurchaseEvent } from '../../generated/schema'
 import { makeContentId, makeLicenseId, registrationContentAndLicenseId } from '../utils'
 
 export function handleNFTRegisteredPurchasable(event: NFTRegistered): void {
+  log.info('REGISTER PURCHASABLE', [])
   let result = registrationContentAndLicenseId(
     event.address, 
     event.params.nftAddress,
@@ -16,18 +17,22 @@ export function handleNFTRegisteredPurchasable(event: NFTRegistered): void {
     return
   }
   let licenseId = result.licenseId
+  log.info('got license id: {}', [licenseId])
 
   let purchasableLicense = PurchasableLicense.load(licenseId)
   if (purchasableLicense == null) {
     purchasableLicense = new PurchasableLicense(licenseId)
     purchasableLicense.licenseManagerAddress = event.address
     purchasableLicense.content = result.contentId
+    log.info("null PL: added content Id: {} {}", [purchasableLicense.content, result.contentId])
   }
   purchasableLicense.registrant = event.transaction.from
   purchasableLicense.price = event.params.price
   purchasableLicense.sharePercentage = event.params.sharePercentage
   purchasableLicense.licenseTokenAddress = event.params.licenseTokenAddress
   purchasableLicense.save()
+  let license = PurchasableLicense.load(licenseId)
+  log.info('purchasable license saved: {}', [license.id])
 }
 
 export function handleNFTUnregistered(event: NFTUnregistered): void {

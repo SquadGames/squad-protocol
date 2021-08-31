@@ -13,6 +13,7 @@ type Content @entity {
   nftAddress: Bytes!
   nftId: BigInt!
   type: String!
+  uses: [Content!]
   purchasableLicenses: [PurchasableLicense!]! @derivedFrom(field: "content")
   revShareLicenses: [RevShareLicense!]! @derivedFrom(field: "content")
 }

@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import axios from 'axios'
-import BalanceTree from '../../hardhat/lib/balance-tree'
+import { toHexLeaf, toLeaf, Balance } from '../../hardhat/lib/merkleTools'
+import { MerkleTree, makeMerkleTree, getHexRoot, getHexProof } from '../../lib'
 import { getConfig, getSecrets } from '@squad/lib'
 import * as fs from 'fs'
 
@@ -38,6 +39,7 @@ export const REV_SHARE_LM_ADDR =
 export const DEF_PRICE = ethers.utils.parseEther('10')
 export const DEF_SHARE = 50
 export const DEF_TYPE = 'jpeg'
+export const DEF_USES = ['0x123456']
 export const GRAPH_DELAY = 1500
 
 const provider = ethers.getDefaultProvider(config.networkNameOrUrl)
@@ -135,9 +137,10 @@ export async function registerPL (
   nft: NFT,
   price: ethers.BigNumber,
   share: number,
-  type: string
+  type: string,
+  uses: string[]
 ): Promise<void> {
-  const jsonString = JSON.stringify({ type })
+  const jsonString = JSON.stringify({ type, uses })
   await alicePlm.registerNFT(
     nft.address,
     nft.id,
@@ -153,15 +156,15 @@ export async function unregisterPL (nft: NFT): Promise<void> {
   await delay()
 }
 
-export async function mintAndRegisterPL (): Promise<NFT> {
+export async function mintAndRegisterPL (uses: string[]): Promise<NFT> {
   const nft = await mint()
-  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE)
+  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, uses)
   await delay()
   return nft
 }
 
-export async function registerRSL (nft: NFT, share: number, type: string): Promise<void> {
-  const jsonString = JSON.stringify({ type })
+export async function registerRSL (nft: NFT, share: number, type: string, uses: string[]): Promise<void> {
+  const jsonString = JSON.stringify({ type, uses })
   await aliceRslm.registerNFT(
     nft.address,
     nft.id,
@@ -176,9 +179,9 @@ export async function unregisterRSL (nft: NFT): Promise<void> {
   await delay()
 }
 
-export async function mintAndRegisterRSL (): Promise<NFT> {
+export async function mintAndRegisterRSL (uses: string[]): Promise<NFT> {
   const nft = await mint()
-  await registerRSL(nft, DEF_SHARE, DEF_TYPE)
+  await registerRSL(nft, DEF_SHARE, DEF_TYPE, uses)
   await delay()
   return nft
 }
@@ -228,7 +231,7 @@ interface ClaimRes {
 }
 
 export async function getProofInfo (): Promise<{ROOT: string, PROOF: string[]}> {
-  const balances = [
+  const balances: Balance[] = [
     {
       account: signer.address,
       allocation: ALICE_ALLOC
@@ -238,9 +241,10 @@ export async function getProofInfo (): Promise<{ROOT: string, PROOF: string[]}> 
       allocation: ALICE_ALLOC
     }
   ]
-  const balanceTree: BalanceTree = new BalanceTree(balances)
-  const ROOT = balanceTree.getHexRoot()
-  const PROOF = balanceTree.getHexProof(signer.address, ALICE_ALLOC)
+  const leaves = balances.map(b => { return toLeaf(b) })
+  const balanceTree: MerkleTree = makeMerkleTree(leaves)
+  const ROOT = getHexRoot(balanceTree)
+  const PROOF = getHexProof(balanceTree, toHexLeaf(balances[0]))
   return { ROOT, PROOF }
 }
 
@@ -293,6 +297,9 @@ export async function queryContent (nft: NFT): Promise<any> {
       nftAddress
       nftId
       type
+      uses {
+        id
+      }
       purchasableLicenses {
         id
       }
@@ -399,7 +406,7 @@ export async function queryTransfer (hash: string | undefined): Promise<any> {
   return (await querySubgraph(query)).data.transfer
 }
 
-async function querySubgraph (query: string): Promise<any> {
+export async function querySubgraph (query: string): Promise<any> {
   let res
   try {
     res = (await axios.post(APIURL, { query })).data
