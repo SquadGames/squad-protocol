@@ -1,18 +1,16 @@
 import {
   Ethereum_Mutation,
   Ethereum_TxResponse,
-  Ipfs_Mutation
+  Ipfs_Mutation,
   Input_mintNFT,
   Input_registerPurchasableNFTContent,
   Input_registerRevShareNFTContent,
   Input_registerPurchasableContent,
   Input_registerRevShareContent,
   Input_approve,
-} from "./w3";
+} from "./w3"
 
 import { BigInt } from "@web3api/wasm-as"
-
-import { getConfig } from '@squad/lib'
 
 export function mintNFT(input: Input_mintNFT): Ethereum_TxResponse {
   const contentURI = Ipfs_Mutation.addFile({
@@ -36,21 +34,25 @@ export function mintNFT(input: Input_mintNFT): Ethereum_TxResponse {
 }
 
 export function registerPurchasableNFTContent(
-  input: Input_registerPurchasableNftContent
-): String {
-  Ethereum_Mutation.callContractMethod({
-    connection: input.connection,
+  input: Input_registerPurchasableNFTContent
+): Ethereum_TxResponse {
+  const data: String = input.data === null ? "" : input.data!
+  const res: Ethereum_TxResponse = Ethereum_Mutation.callContractMethod({
     address: input.licenseManagerAddress,
-    method: "function (address,uint256,address,uint256,uint8,string) returns(uint256)",
-    args:[
+    method: "function registerNFT(address,uint256,address,uint256,uint8,string)",
+    args: [
       input.nftAddress,
-      input.nftId,
+      input.nftId.toString(),
       input.registrant,
-      input.price,
-      input.sharePercentage,
-      input.data,
-    ]
+      input.price.toString(),
+      input.sharePercentage.toString(),
+      data,
+    ],
+    connection: input.connection,
+    txOverrides: null,
   })
+
+  return res
 }
 
 export function registerPurchasableContent(

@@ -11,14 +11,15 @@ type Mutation {
   ): Ethereum_TxResponse!
 
   registerPurchasableNFTContent (
+    connection: Ethereum_Connection
+    licenseTokenAddress: String!
     nftAddress: String!
     nftId: BigInt!
     registrant: String!
-    data: String
-    licenseManagerAddress: String!
     price: BigInt!
     sharePercentage: BigInt!
-  ): String! # ID or maybe the content object?
+    data: String!
+  ): Ethereum_TxResponse! # ID or maybe the content object?
 
   registerPurchasableContent(
     creatorAddress: String!
