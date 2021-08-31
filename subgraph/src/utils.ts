@@ -1,4 +1,13 @@
-import { log, Address, BigInt, json, ByteArray, Bytes, JSONValueKind, TypedMap, JSONValue } from "@graphprotocol/graph-ts"
+import { 
+  Address, 
+  BigInt, 
+  json, 
+  ByteArray, 
+  Bytes, 
+  JSONValueKind, 
+  TypedMap, 
+  JSONValue 
+} from "@graphprotocol/graph-ts"
 import { Content } from '../generated/schema'
 
 export function makeContentId(address: Address, id: BigInt): string {
@@ -59,10 +68,8 @@ function getUses(object: TypedMap<string, JSONValue>): UsesResult {
       return result
     }
     let usesId = usesArray[i].toString()
-    log.info("Found uses string {}", [usesId])
     let content = Content.load(usesId)
     if (content != null) {
-      log.info("Found valid id {}", [usesId])
       result.uses.push(usesId)
     }
   }
@@ -97,9 +104,7 @@ export function registrationContentAndLicenseId(
    * Left in for posterity: for some reason, setting result.contentId this way works here,
    * but result.contentId gets set to "none" somewhere before the return statement.
    * result.contentId = contentId
-   * log.info("Set contentId: {} {}", [result.contentId, contentId])
    */
-  log.info("Trying to parse string {}", [data])
   let objectRes = getObject(data)
   if (objectRes.error != "none") {
     result.error = objectRes.error
@@ -132,6 +137,5 @@ export function registrationContentAndLicenseId(
 
   result.contentId = content.id
   result.licenseId = makeLicenseId(contentId, address)
-  log.info("Returning result: {} {} {}", [result.contentId, result.licenseId, result.error])
   return result
 }
