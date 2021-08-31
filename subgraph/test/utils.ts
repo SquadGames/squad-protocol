@@ -1,6 +1,7 @@
 import { ethers } from 'ethers'
 import axios from 'axios'
-import BalanceTree from '../../hardhat/lib/balance-tree'
+import { toHexLeaf, toLeaf, Balance } from '../../hardhat/lib/merkleTools'
+import { MerkleTree, makeMerkleTree, getHexRoot, getHexProof } from '../../lib'
 import { getConfig, getSecrets } from '@squad/lib'
 import * as fs from 'fs'
 
@@ -135,9 +136,10 @@ export async function registerPL (
   nft: NFT,
   price: ethers.BigNumber,
   share: number,
-  type: string
+  type: string,
+  underlyingWorks: string[]
 ): Promise<void> {
-  const jsonString = JSON.stringify({ type })
+  const jsonString = JSON.stringify({ type, underlyingWorks })
   await alicePlm.registerNFT(
     nft.address,
     nft.id,
@@ -153,15 +155,15 @@ export async function unregisterPL (nft: NFT): Promise<void> {
   await delay()
 }
 
-export async function mintAndRegisterPL (): Promise<NFT> {
+export async function mintAndRegisterPL (underlyingWorks: string[]): Promise<NFT> {
   const nft = await mint()
-  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE)
+  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, underlyingWorks)
   await delay()
   return nft
 }
 
-export async function registerRSL (nft: NFT, share: number, type: string): Promise<void> {
-  const jsonString = JSON.stringify({ type })
+export async function registerRSL (nft: NFT, share: number, type: string, underlyingWorks: string[]): Promise<void> {
+  const jsonString = JSON.stringify({ type, underlyingWorks })
   await aliceRslm.registerNFT(
     nft.address,
     nft.id,
@@ -176,9 +178,9 @@ export async function unregisterRSL (nft: NFT): Promise<void> {
   await delay()
 }
 
-export async function mintAndRegisterRSL (): Promise<NFT> {
+export async function mintAndRegisterRSL (underlyingWorks: string[]): Promise<NFT> {
   const nft = await mint()
-  await registerRSL(nft, DEF_SHARE, DEF_TYPE)
+  await registerRSL(nft, DEF_SHARE, DEF_TYPE, underlyingWorks)
   await delay()
   return nft
 }
@@ -228,7 +230,7 @@ interface ClaimRes {
 }
 
 export async function getProofInfo (): Promise<{ROOT: string, PROOF: string[]}> {
-  const balances = [
+  const balances: Balance[] = [
     {
       account: signer.address,
       allocation: ALICE_ALLOC
@@ -238,9 +240,10 @@ export async function getProofInfo (): Promise<{ROOT: string, PROOF: string[]}> 
       allocation: ALICE_ALLOC
     }
   ]
-  const balanceTree: BalanceTree = new BalanceTree(balances)
-  const ROOT = balanceTree.getHexRoot()
-  const PROOF = balanceTree.getHexProof(signer.address, ALICE_ALLOC)
+  const leaves = balances.map(b => { return toLeaf(b) })
+  const balanceTree: MerkleTree = makeMerkleTree(leaves)
+  const ROOT = getHexRoot(balanceTree)
+  const PROOF = getHexProof(balanceTree, toHexLeaf(balances[0]))
   return { ROOT, PROOF }
 }
 
@@ -293,6 +296,9 @@ export async function queryContent (nft: NFT): Promise<any> {
       nftAddress
       nftId
       type
+      underlyingWorks {
+        id
+      }
       purchasableLicenses {
         id
       }
@@ -399,7 +405,7 @@ export async function queryTransfer (hash: string | undefined): Promise<any> {
   return (await querySubgraph(query)).data.transfer
 }
 
-async function querySubgraph (query: string): Promise<any> {
+export async function querySubgraph (query: string): Promise<any> {
   let res
   try {
     res = (await axios.post(APIURL, { query })).data
