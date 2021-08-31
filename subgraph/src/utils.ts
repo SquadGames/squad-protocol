@@ -50,28 +50,24 @@ function getType(object: TypedMap<string, JSONValue>): TypeResult {
   return result
 }
 
-class UsesResult { uses: string[]; error: string }
+class UnderlyingWorksResult { underlyingWorks: string[]; error: string }
 
-function getUses(object: TypedMap<string, JSONValue>): UsesResult {
-  let result: UsesResult = { uses: [], error: "none" }
+function getUnderlyingWorks(object: TypedMap<string, JSONValue>): UnderlyingWorksResult {
+  let result: UnderlyingWorksResult = { underlyingWorks: [], error: "none" }
 
-  let usesValue = object.get("uses")
-  if (usesValue.kind != JSONValueKind.ARRAY) {
-    result.error = "Missing valid 'uses' field"
+  let underlyingWorksValue = object.get("underlyingWorks")
+  if (underlyingWorksValue.kind != JSONValueKind.ARRAY) {
+    result.error = "Missing valid 'underlyingWorks' field"
     return result
   }
   
-  let usesArray = usesValue.toArray()
-  for(let i = 0; i < usesArray.length; i++) {
-    if (usesArray[i].kind != JSONValueKind.STRING) {
-      result.error = "Uses array contains invalid value"
+  let underlyingWorksArray = underlyingWorksValue.toArray()
+  for(let i = 0; i < underlyingWorksArray.length; i++) {
+    if (underlyingWorksArray[i].kind != JSONValueKind.STRING) {
+      result.error = "UnderlyingWorks array contains invalid value"
       return result
     }
-    let usesId = usesArray[i].toString()
-    let content = Content.load(usesId)
-    if (content != null) {
-      result.uses.push(usesId)
-    }
+    result.underlyingWorks.push(underlyingWorksArray[i].toString())
   }
   
   return result
@@ -113,17 +109,17 @@ export function registrationContentAndLicenseId(
 
   /**
    * More comments for posterity: I get 'wasm trap: out of bounds memory access' errors
-   * when calling getUses _after_ getType. Calling getUses first works.
+   * when calling getUnderlyingWorks _after_ getType. Calling getUnderlyingWorks first works.
    */
-  let usesResult = getUses(objectRes.object)
-  if (usesResult.error != "none") {
-    result.error = usesResult.error
+  let underlyingWorksResult = getUnderlyingWorks(objectRes.object)
+  if (underlyingWorksResult.error != "none") {
+    result.error = underlyingWorksResult.error
     return result
   }
-  if (usesResult.uses.length > 0) {
-    content.uses = usesResult.uses
+  if (underlyingWorksResult.underlyingWorks.length > 0) {
+    content.underlyingWorks = underlyingWorksResult.underlyingWorks
   } else {
-    content.uses = null
+    content.underlyingWorks = null
   }
 
   let typeResult = getType(objectRes.object)

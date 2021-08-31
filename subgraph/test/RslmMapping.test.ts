@@ -31,7 +31,7 @@ async function checkNftRegistrationRSL (
   nft: NFT,
   share: number,
   type: string,
-  uses: any[]
+  underlyingWorks: any[]
 ): Promise<void> {
   const content = await queryContent(nft)
   const licenses = await queryRevShareLicenses(nft, REV_SHARE_LM_ADDR)
@@ -42,7 +42,7 @@ async function checkNftRegistrationRSL (
   assert.equal(content.nftAddress, nft.address, 'content nft address')
   assert.equal(content.nftId, nft.id, 'content nft id')
   assert.equal(content.type, type, 'content type')
-  assert.deepEqual(content.uses, uses, 'content uses')
+  assert.deepEqual(content.underlyingWorks, underlyingWorks, 'content underlyingWorks')
   assert.equal(license.id, makeLicenseId(nft, REV_SHARE_LM_ADDR), 'license id')
   assert.equal(license.licenseManagerAddress, REV_SHARE_LM_ADDR, 'license manager address')
   assert.equal(license.registrant, aliceAddress.toLowerCase(), 'license registrant')
@@ -52,7 +52,7 @@ async function checkNftRegistrationRSL (
 describe('RevShareLicenseManager mapping', function (this: any) {
   this.timeout(20000)
   let nft1: NFT
-  // matches the query for 'uses' in 'queryContent'
+  // matches the query for 'underlyingWorks' in 'queryContent'
   let content1: { id: string }
 
   it('should add a license on NFTRegistered event', async () => {
@@ -66,8 +66,8 @@ describe('RevShareLicenseManager mapping', function (this: any) {
     await checkNftRegistrationRSL(nft, DEF_SHARE, DEF_TYPE, [{ id: content1.id }])
     const newShare = 51
     const newType = 'text'
-    const newUses = ['0x9876543']
-    await registerRSL(nft, newShare, newType, newUses)
+    const newUnderlyingWorks = ['0x9876543']
+    await registerRSL(nft, newShare, newType, newUnderlyingWorks)
     await delay()
     await checkNftRegistrationRSL(nft, newShare, newType, [])
   })

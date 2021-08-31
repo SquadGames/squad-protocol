@@ -41,7 +41,7 @@ async function checkNftRegistrationPL (
   price: ethers.BigNumber,
   share: number,
   type: string,
-  uses: any[]
+  underlyingWorks: any[]
 ): Promise<void> {
   const content = await queryContent(nft)
   const licenses = await queryPurchasableLicenses(nft, PURCHASABLE_LM_ADDR)
@@ -52,7 +52,7 @@ async function checkNftRegistrationPL (
   assert.equal(content.nftAddress, nft.address, 'content nft address')
   assert.equal(content.nftId, nft.id, 'content nft id')
   assert.equal(content.type, type, 'content type')
-  assert.deepEqual(content.uses, uses, 'content uses')
+  assert.deepEqual(content.underlyingWorks, underlyingWorks, 'content underlyingWorks')
   assert.equal(license.id, makeLicenseId(nft, PURCHASABLE_LM_ADDR), 'license id')
   assert.equal(license.licenseManagerAddress, PURCHASABLE_LM_ADDR, 'license manager address')
   assert.equal(license.licenseTokenAddress, licenseTokenAddr, 'license token address')
@@ -64,7 +64,7 @@ async function checkNftRegistrationPL (
 describe('PurchasableLicenseManager mapping', function (this: any) {
   this.timeout(20000)
   let nft1: NFT
-  // matches the query for 'uses' in 'queryContent'
+  // matches the query for 'underlyingWorks' in 'queryContent'
   let content1: { id: string }
 
   it('should add a license on NFTRegistered event', async () => {
@@ -79,8 +79,8 @@ describe('PurchasableLicenseManager mapping', function (this: any) {
     const newPrice = ethers.utils.parseEther('11')
     const newShare = 51
     const newType = 'text'
-    const newUses = ['0x9876543']
-    await registerPL(nft, newPrice, newShare, newType, newUses)
+    const newUnderlyingWorks = ['0x9876543']
+    await registerPL(nft, newPrice, newShare, newType, newUnderlyingWorks)
     await delay()
     await checkNftRegistrationPL(nft, newPrice, newShare, newType, [])
   })

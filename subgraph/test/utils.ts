@@ -39,7 +39,6 @@ export const REV_SHARE_LM_ADDR =
 export const DEF_PRICE = ethers.utils.parseEther('10')
 export const DEF_SHARE = 50
 export const DEF_TYPE = 'jpeg'
-export const DEF_USES = ['0x123456']
 export const GRAPH_DELAY = 1500
 
 const provider = ethers.getDefaultProvider(config.networkNameOrUrl)
@@ -138,9 +137,9 @@ export async function registerPL (
   price: ethers.BigNumber,
   share: number,
   type: string,
-  uses: string[]
+  underlyingWorks: string[]
 ): Promise<void> {
-  const jsonString = JSON.stringify({ type, uses })
+  const jsonString = JSON.stringify({ type, underlyingWorks })
   await alicePlm.registerNFT(
     nft.address,
     nft.id,
@@ -156,15 +155,15 @@ export async function unregisterPL (nft: NFT): Promise<void> {
   await delay()
 }
 
-export async function mintAndRegisterPL (uses: string[]): Promise<NFT> {
+export async function mintAndRegisterPL (underlyingWorks: string[]): Promise<NFT> {
   const nft = await mint()
-  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, uses)
+  await registerPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, underlyingWorks)
   await delay()
   return nft
 }
 
-export async function registerRSL (nft: NFT, share: number, type: string, uses: string[]): Promise<void> {
-  const jsonString = JSON.stringify({ type, uses })
+export async function registerRSL (nft: NFT, share: number, type: string, underlyingWorks: string[]): Promise<void> {
+  const jsonString = JSON.stringify({ type, underlyingWorks })
   await aliceRslm.registerNFT(
     nft.address,
     nft.id,
@@ -179,9 +178,9 @@ export async function unregisterRSL (nft: NFT): Promise<void> {
   await delay()
 }
 
-export async function mintAndRegisterRSL (uses: string[]): Promise<NFT> {
+export async function mintAndRegisterRSL (underlyingWorks: string[]): Promise<NFT> {
   const nft = await mint()
-  await registerRSL(nft, DEF_SHARE, DEF_TYPE, uses)
+  await registerRSL(nft, DEF_SHARE, DEF_TYPE, underlyingWorks)
   await delay()
   return nft
 }
@@ -297,7 +296,7 @@ export async function queryContent (nft: NFT): Promise<any> {
       nftAddress
       nftId
       type
-      uses {
+      underlyingWorks {
         id
       }
       purchasableLicenses {
