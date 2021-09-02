@@ -25,13 +25,18 @@
     "@web3api/graph-node-plugin-js": "^0.0.1-prealpha.36",
     "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.36",
     "@web3api/wasm-as": "0.0.1-prealpha.36",
+    "as-base64": "^0.2.0",
     "assemblyscript": "0.19.1",
     "axios": "^0.21.1",
     "babel-jest": "^27.0.6",
     "ethers": "5.0.7",
+    "install": "^0.13.0",
     "jest": "^27.0.6",
+    "npm": "^7.21.1",
     "solc": "0.8.3",
+    "source-map-support": "^0.5.19",
     "ts-jest": "^27.0.5",
     "ts-standard": "^10.0.0"
-  }
+  },
+  "dependencies": {}
 }

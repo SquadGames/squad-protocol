@@ -7,6 +7,10 @@ import axios from 'axios'
 import { getConfig } from '@squad/lib'
 import { ethers } from 'ethers'
 
+const NFTRegisteredAbi = "NFTRegistered(address,uint256,address,uint256,uint8,address,string)"
+const NFTUnregisteredAbi = "NFTUnregistered(address,uint256)"
+const PurchaseAbi = "Purchase(address,uint256,address,uint256,uint256,address)"
+
 // TODO move TxResponse interface from tests to lib
 interface TxResponse {
   hash: string;
@@ -38,12 +42,6 @@ export interface Access {
 jest.setTimeout(120000)
 
 const config = getConfig()
-
-const NFTRegisteredAbi = "NFTRegistered(address,uint256,address,uint256,uint8,address,string)"
-const NFTUnregisteredAbi = "NFTUnregistered(address,uint256)"
-const PurchaseAbi = "Purchase(address,uint256,address,uint256,uint256,address)"
-
-
 
 async function getClient() {
   // fetch providers from dev server
@@ -111,6 +109,72 @@ describe("Squad Content Registrarion", () => {
     client = await getClient()
     provider = new ethers.providers.JsonRpcProvider("http://localhost:8545")
     creator = await provider.getSigner().getAddress()
+  })
+
+  test("Registers new NFTs for new purchasable content", async () => {
+    // Set up
+    const newB64Content: String = Buffer.from("MockRawFileData").toString("base64")
+    const creatorAddress = "mock-creator-address"
+    const registrant = "mock-registrant-address"
+    const price = 4
+    const sharePercentage = 20
+
+    // execute system under test
+    const cases = [
+      {
+        variables: {
+          contentMedium: "BASE64_STRING",
+          content: newB64Content,
+          metadataMedium: "STRING",
+          metadata: "mock-metadata-string",
+          data: ' { "mockdata": 3 }',
+        },
+        expectedContent: "not ready",
+        expectedMetadata: "not this",
+      }, {
+        variables: {
+          contentMedium: "IPFS_CID",
+          content: 'mock-content-IPFS-CID',
+          metadataMedium: "IPFS_CID",
+          metadata: "mock-metadata-IPFS-CID",
+          data: ' { "mockdata": 7 }',
+        },
+        expectedContent: "not this",
+        expectedMetadata: "not this",
+      },
+    ]
+
+    cases.forEach(async testCase => {
+      const result = await client.query({
+        uri: squadUri,
+        query: `
+          mutation registerPurchasableContent {
+            registerPurchasableContent(
+              creatorAddress: $creatorAddress
+              licenseManagerAddress: $licenseManagerAddress
+              contentMedium: $contentMedium
+              content: $content
+              metadataMedium: $metadataMedium
+              metadata: $metadata
+              registrant: $registrant
+              data: $data
+              sharePercentage: $sharePercentage
+              price: $price
+            )
+          }`,
+        variables: Object.assign(
+          {
+            creatorAddress,
+            licenseManagerAddress: config.contracts.PurchasableLicenseManager.address,
+            registrant,
+            price,
+            sharePercentage: sharePercentage.toString(),
+          },
+          testCase.variables
+        )
+      })
+      console.log(result)
+    })
   })
 
   test("Registers existing NFT as purchasable", async () => {

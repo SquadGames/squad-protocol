@@ -1,5 +1,6 @@
 #import { Mutation, Connection } into Ethereum from "w3://ens/ethereum.web3api.eth"
 #import { Mutation } into Ipfs from "w3://ens/ipfs.web3api.eth"
+#import { Query } into Sha3 from "w3://ens/sha3.web3api.eth"
 
 type Mutation {
   mintNFT(
@@ -24,7 +25,9 @@ type Mutation {
   registerPurchasableContent(
     creatorAddress: String!
     licenseManagerAddress: String!
+    contentMedim: MediaType!
     content: String!
+    metadataMedium: MediaType!
     metadata: String!
     registrant: String!
     data: String
@@ -61,3 +64,8 @@ type Mutation {
   ): Ethereum_TxResponse!
 }
 
+enum MediaType {
+  STRING
+  BASE64_STRING
+  URI
+}
