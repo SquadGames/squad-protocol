@@ -121,6 +121,7 @@ const createAndRegisterNFTAbi = "function createAndRegisterNFT(address,string,st
 export function registerPurchasableContent(
   input: Input_registerPurchasableContent
 ): Ethereum_TxResponse {
+
   // put the content and metadata on IPFS and get their URIs
   const contentInfo = handler(input.contentMedium)(
     input.content,
@@ -131,6 +132,7 @@ export function registerPurchasableContent(
     input.metadataHash,
   )
 
+  // Handle cases where the hash does and does not have the 0x prefix
   const contentHash = contentInfo.sha3.length === 64
     ? `0x${contentInfo.sha3}`
     : contentInfo.sha3

@@ -229,7 +229,13 @@ describe("Squad Content Registrarion", () => {
           expect(e.message).toMatch(expectedError)
         })
       }
-      // expected not to error
+
+      if (testCase.expectedContent !== undefined) {
+        expect("Not Implemented").toBe("Implemented")
+      }
+      if (testCase.expectedMetadata !== undefined) {
+        expect("Not Implemented").toBe("Implemented")
+      }
     })
   })
 
