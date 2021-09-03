@@ -6,10 +6,16 @@ import { graphNodePlugin } from "@web3api/graph-node-plugin-js"
 import axios from 'axios'
 import { getConfig } from '@squad/lib'
 import { ethers } from 'ethers'
+import * as crypto from 'crypto'
 
 const NFTRegisteredAbi = "NFTRegistered(address,uint256,address,uint256,uint8,address,string)"
 const NFTUnregisteredAbi = "NFTUnregistered(address,uint256)"
 const PurchaseAbi = "Purchase(address,uint256,address,uint256,uint256,address)"
+
+async function unique(): Promise<string> {
+  const b = await crypto.randomBytes(256)
+  return `UINQUE-${b.toString('hex')}`
+}
 
 // TODO move TxResponse interface from tests to lib
 interface TxResponse {
@@ -114,33 +120,67 @@ describe("Squad Content Registrarion", () => {
   test("Registers new NFTs for new purchasable content", async () => {
     // Set up
     const newB64Content: String = Buffer.from("MockRawFileData").toString("base64")
-    const creatorAddress = "mock-creator-address"
-    const registrant = "mock-registrant-address"
+    const creatorAddress = creator
+    const registrant = creator
     const price = 4
     const sharePercentage = 20
 
+    interface TestCase {
+      variables: any
+      expectedContent?: string
+      expectedMetadata?: string
+      expectedErrors?: string[]
+    }
+
     // execute system under test
-    const cases = [
+    const cases: TestCase[] = [
       {
         variables: {
           contentMedium: "BASE64_STRING",
           content: newB64Content,
-          metadataMedium: "STRING",
+          metadataMedium: "UTF8_STRING",
           metadata: "mock-metadata-string",
           data: ' { "mockdata": 3 }',
         },
-        expectedContent: "not ready",
-        expectedMetadata: "not this",
-      }, {
-        variables: {
-          contentMedium: "IPFS_CID",
-          content: 'mock-content-IPFS-CID',
-          metadataMedium: "IPFS_CID",
-          metadata: "mock-metadata-IPFS-CID",
-          data: ' { "mockdata": 7 }',
-        },
         expectedContent: "not this",
         expectedMetadata: "not this",
+      },
+      {
+        variables: {
+          contentMedium: "URI",
+          content: 'fail-case-mock-content-URI',
+          metadataMedium: "URI",
+          metadata: "fail-case-mock-metadata-URI",
+          data: ' { "mockdata": 7, "failCase": true }',
+        },
+        expectedErrors: ["__w3_abort: hash required for URI MediaType"],
+      },
+      {
+        variables: {
+          contentMedium: "URI",
+          content: 'mock-content-URI',
+          metadataMedium: "URI",
+          metadata: "mock-metadata-URI",
+          data: ' { "mockdata": 7 }',
+          metadataHash: ethers.utils.keccak256(
+            Buffer.from('mock-metadata-uri-hash')
+          ),
+          contentHash: ethers.utils.keccak256(
+            Buffer.from('mock-content-uri-hash')
+          ),
+        },
+        expectedContent: "something should be here",
+        expectedMetadata: "something should be here",
+      },
+      {
+        variables: {
+          contentMedium: "STRING",
+          content: 'mock-content-URI',
+          metadataMedium: "URI",
+          metadata: "mock-metadata-URI",
+          data: ' { "mockdata": 7 }',
+        },
+        expectedErrors: ["__w3_abort: Invalid key for enum 'MediaType': STRING"],
       },
     ]
 
@@ -157,9 +197,11 @@ describe("Squad Content Registrarion", () => {
               metadataMedium: $metadataMedium
               metadata: $metadata
               registrant: $registrant
-              data: $data
               sharePercentage: $sharePercentage
               price: $price
+              ${testCase.variables?.data ? "data: $data" : ""}
+              ${testCase.variables?.contentHash ? "contentHash: $contentHash" : ""}
+              ${testCase.variables?.metadataHash ? "metadataHash: $metadataHash" : ""}
             )
           }`,
         variables: Object.assign(
@@ -167,13 +209,27 @@ describe("Squad Content Registrarion", () => {
             creatorAddress,
             licenseManagerAddress: config.contracts.PurchasableLicenseManager.address,
             registrant,
-            price,
+            price: price.toString(),
             sharePercentage: sharePercentage.toString(),
           },
           testCase.variables
         )
       })
-      console.log(result)
+      if (result.errors === undefined) {
+        expect(testCase.expectedErrors).toBeUndefined()
+      } else {
+        if(testCase.expectedErrors === undefined) {
+          expect(result.errors).toBe("no errors")
+          return // to narrow the type of testCase.expectedErrors
+        }
+        expect(testCase.expectedErrors.length).toBe(result.errors.length)
+        result.errors.forEach(async (e, i) => {
+          const expectedErrors = testCase.expectedErrors ?? []
+          const expectedError = expectedErrors[i] ?? await unique()
+          expect(e.message).toMatch(expectedError)
+        })
+      }
+      // expected not to error
     })
   })
 

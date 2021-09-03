@@ -23,17 +23,20 @@ type Mutation {
   ): Ethereum_TxResponse! # ID or maybe the content object?
 
   registerPurchasableContent(
+    connection: Ethereum_Connection
     creatorAddress: String!
     licenseManagerAddress: String!
-    contentMedim: MediaType!
+    contentMedium: MediaType!
     content: String!
+    contentHash: String
     metadataMedium: MediaType!
     metadata: String!
+    metadataHash: String
     registrant: String!
     data: String
     price: BigInt!
     sharePercentage: BigInt!
-  ): String! # ID or maybe the content object?
+  ): Ethereum_TxResponse! # ID or maybe the content object?
 
   registerRevShareNFTContent (
     nftAddress: String!
@@ -65,7 +68,7 @@ type Mutation {
 }
 
 enum MediaType {
-  STRING
+  UTF8_STRING
   BASE64_STRING
   URI
 }
