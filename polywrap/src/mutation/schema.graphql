@@ -1,5 +1,6 @@
 #import { Mutation, Connection } into Ethereum from "w3://ens/ethereum.web3api.eth"
 #import { Mutation } into Ipfs from "w3://ens/ipfs.web3api.eth"
+#import { Query } into Sha3 from "w3://ens/sha3.web3api.eth"
 
 type Mutation {
   mintNFT(
@@ -10,10 +11,64 @@ type Mutation {
     metadata: String!
   ): Ethereum_TxResponse!
 
+  registerPurchasableNFTContent (
+    connection: Ethereum_Connection
+    licenseManagerAddress: String!
+    nftAddress: String!
+    nftId: BigInt!
+    registrant: String!
+    price: BigInt!
+    sharePercentage: BigInt!
+    data: String
+  ): Ethereum_TxResponse! # ID or maybe the content object?
+
+  registerPurchasableContent(
+    connection: Ethereum_Connection
+    creatorAddress: String!
+    licenseManagerAddress: String!
+    contentMedium: MediaType!
+    content: String!
+    contentHash: String
+    metadataMedium: MediaType!
+    metadata: String!
+    metadataHash: String
+    registrant: String!
+    data: String
+    price: BigInt!
+    sharePercentage: BigInt!
+  ): Ethereum_TxResponse! # ID or maybe the content object?
+
+  registerRevShareNFTContent(
+    nftAddress: String!
+    nftId: BigInt!
+    registrant: String!
+    data: String
+    licenseManagerAddress: String!
+    minSharePercentage: BigInt!
+  ): String!
+
+  registerRevShareContent(
+    creatorAddress: String!
+    licenseManagerAddress: String!
+    content: String!
+    metadata: String!
+    registrant: String!
+    data: String
+    minSharePercentage: BigInt!
+  ): String!
+
+  # Do we need this approve? probably not, but might be useful as a
+  # sort of standard library for polywrap
   approve(
     address: String!
     connection: Ethereum_Connection
     spender: String!
     amount: BigInt!
   ): Ethereum_TxResponse!
+}
+
+enum MediaType {
+  UTF8_STRING
+  BASE64_STRING
+  URI
 }

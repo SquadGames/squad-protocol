@@ -8,8 +8,8 @@
     "down": "npx w3 test-env down",
     "build": "echo 'build in deploy'",
     "deploy": "npx w3 build --ipfs http://localhost:5001 --test-ens squadprotocol.eth",
-    "lint": "echo 'linting for assemblyscript is not mature. Not implemented'",
-    "format": "echo 'linting for assemblyscript is not mature. Not implemented'",
+    "lint": "echo 'Not Implemented: TODO implement linting for ts tests'",
+    "format": "echo 'Not Implemented: TODO implement formatting for ts tests'",
     "test": "jest",
     "test:old": "yarn constants:local && npx w3 query ./recipes/e2e.json && yarn lint",
     "constants:local": "NETWORK=localhost node ./scripts/get-constants.js"
@@ -25,13 +25,18 @@
     "@web3api/graph-node-plugin-js": "^0.0.1-prealpha.36",
     "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.36",
     "@web3api/wasm-as": "0.0.1-prealpha.36",
+    "as-base64": "^0.2.0",
     "assemblyscript": "0.19.1",
     "axios": "^0.21.1",
     "babel-jest": "^27.0.6",
     "ethers": "5.0.7",
+    "install": "^0.13.0",
     "jest": "^27.0.6",
+    "npm": "^7.21.1",
     "solc": "0.8.3",
+    "source-map-support": "^0.5.19",
     "ts-jest": "^27.0.5",
     "ts-standard": "^10.0.0"
-  }
+  },
+  "dependencies": {}
 }
