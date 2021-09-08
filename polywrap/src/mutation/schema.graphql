@@ -38,7 +38,7 @@ type Mutation {
     sharePercentage: BigInt!
   ): Ethereum_TxResponse! # ID or maybe the content object?
 
-  registerRevShareNFTContent (
+  registerRevShareNFTContent(
     nftAddress: String!
     nftId: BigInt!
     registrant: String!

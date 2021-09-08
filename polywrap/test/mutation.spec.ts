@@ -5,7 +5,7 @@ import { ensPlugin } from "@web3api/ens-plugin-js"
 import { graphNodePlugin } from "@web3api/graph-node-plugin-js"
 import axios from 'axios'
 import { getConfig } from '@squad/lib'
-import { ethers } from 'ethers'
+import { ethers, Contract } from 'ethers'
 import * as crypto from 'crypto'
 
 const NFTRegisteredAbi = "NFTRegistered(address,uint256,address,uint256,uint8,address,string)"
@@ -117,6 +117,15 @@ describe("Squad Content Registrarion", () => {
     creator = await provider.getSigner().getAddress()
   })
 
+  let snapshotId: string
+  beforeEach(async () => {
+    snapshotId = await provider.send('evm_snapshot', [])
+  })
+
+  afterEach(async () => {
+    await provider.send('evm_revert', [snapshotId])
+  })
+
   test("Registers new NFTs for new purchasable content", async () => {
     // Set up
     const newB64Content: String = Buffer.from("MockRawFileData").toString("base64")
@@ -127,8 +136,7 @@ describe("Squad Content Registrarion", () => {
 
     interface TestCase {
       variables: any
-      expectedContent?: string
-      expectedMetadata?: string
+      expectedContent?: boolean
       expectedErrors?: string[]
     }
 
@@ -142,8 +150,7 @@ describe("Squad Content Registrarion", () => {
           metadata: "mock-metadata-string",
           data: ' { "mockdata": 3 }',
         },
-        expectedContent: "not this",
-        expectedMetadata: "not this",
+        expectedContent: true,
       },
       {
         variables: {
@@ -169,8 +176,7 @@ describe("Squad Content Registrarion", () => {
             Buffer.from('mock-content-uri-hash')
           ),
         },
-        expectedContent: "something should be here",
-        expectedMetadata: "something should be here",
+        expectedContent: true
       },
       {
         variables: {
@@ -184,8 +190,12 @@ describe("Squad Content Registrarion", () => {
       },
     ]
 
-    cases.forEach(async testCase => {
-      const result = await client.query({
+    for (const i in cases) {
+      const testCase = cases[i]
+      if (testCase === undefined) {
+        throw new Error("never")
+      }
+      const result = await client.query<{ registerPurchasableContent: TxResponse }>({
         uri: squadUri,
         query: `
           mutation registerPurchasableContent {
@@ -230,13 +240,42 @@ describe("Squad Content Registrarion", () => {
         })
       }
 
-      if (testCase.expectedContent !== undefined) {
-        expect("Not Implemented").toBe("Implemented")
+      if (testCase.expectedContent === true) {
+        // find the log that includes the expected content
+        const registerTxHash: string = result.data?.registerPurchasableContent.hash ?? ""
+        const registerTx = await provider.getTransaction(registerTxHash)
+        await registerTx.wait()
+        const managerContract = new Contract(
+          config.contracts.PurchasableLicenseManager.address,
+          [`event ${NFTRegisteredAbi}`],
+          provider,
+        )
+        const nftRegisteredFilter = managerContract.filters!.NFTRegistered!()
+        const rawLogs = await provider.getLogs(nftRegisteredFilter)
+        const rawLog = rawLogs[rawLogs.length - 1] ?? { topics: [""], data: "" }
+        const log = managerContract.interface.parseLog(rawLog)
+        expect(log.args).toHaveLength(7)
+        const [
+          loggedNftAddress,
+          loggedNftId,
+          loggedRegistrant,
+          loggedPrice,
+          loggedSharePercentage,
+          loggedLicenseTokenAddress,
+          loggedData,
+        ] = log.args
+        expect(loggedNftAddress).toBe(
+          config.contracts.ERC721Squad.address
+        )
+        expect(loggedNftId.toNumber()).toBeLessThan(1000)
+        expect(loggedNftId.toNumber()).toBeGreaterThan(0)
+        expect(loggedRegistrant).toBe(creator)
+        expect(loggedPrice.toNumber()).toBe(price)
+        expect(loggedSharePercentage).toBe(sharePercentage)
+        expect(loggedLicenseTokenAddress).toBeDefined()
+        expect(loggedData).toBe(testCase.variables.data)
       }
-      if (testCase.expectedMetadata !== undefined) {
-        expect("Not Implemented").toBe("Implemented")
-      }
-    })
+    }
   })
 
   test("Registers existing NFT as purchasable", async () => {
@@ -326,23 +365,24 @@ describe("Squad Content Registrarion", () => {
     })
 
     expect(registerResponse.errors).toBe(undefined)
-
-    // confirm the expected response
-    const registerLogs = await provider.getLogs({
-      address: config.contracts.PurchasableLicenseManager.address,
-      topics: [ethers.utils.id(NFTRegisteredAbi)],
-    })
-
-    expect(registerLogs.length).toBe(1)
-
-    const rawRegisterLog = registerLogs[0]
-    if (rawRegisterLog === undefined) {
-      throw new Error("expected registerLogs to be length 1")
-    }
-    const NFTRegisteredInterface = new ethers.utils.Interface(
-      [`event ${NFTRegisteredAbi}`]
+    const managerContract = new Contract(
+      config.contracts.PurchasableLicenseManager.address,
+      [`event ${NFTRegisteredAbi}`],
+      provider,
     )
-    const registerLog = NFTRegisteredInterface.parseLog(rawRegisterLog)
+
+    const filters = managerContract.filters!.NFTRegistered!()
+    // confirm the expected response
+/*    const registerLogs = await provider.getLogs({
+      address: config.contracts.PurchasableLicenseManager.address,
+      topics: managerContract.filters!.NFTRegistered!(),
+    })
+    console.log(registerLogs)
+    expect(registerLogs).toHaveLength(1)
+    const registerLog = registerLogs[0]
+    if (registerLog === undefined){
+      throw new Error("never")
+    }
     expect(registerLog.name).toBe("NFTRegistered")
     const [
       loggedNftAddress,
@@ -352,14 +392,13 @@ describe("Squad Content Registrarion", () => {
       loggedSharePercentage,
       loggedLicenseTokenAddress,
       loggedData,
-    ] = registerLog.args
+    ] = registerLog?.args ?? []
 
     expect(loggedNftAddress).toBe(nftAddress)
     expect(loggedNftId.toNumber()).toBe(nftId)
     expect(loggedRegistrant).toBe(registrant)
     expect(loggedPrice.toNumber()).toBe(price)
     expect(loggedSharePercentage).toBe(sharePercentage)
-    expect(loggedData).toBe(data)
+    expect(loggedData).toBe(data) */
   })
 })
-

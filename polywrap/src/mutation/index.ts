@@ -20,6 +20,7 @@ class ContentInfo {
 }
 
 export function mintNFT(input: Input_mintNFT): Ethereum_TxResponse {
+  // TODO use register content implementations for mintNFT for hashing and IPFS
   const contentURI = Ipfs_Mutation.addFile({
     data: String.UTF8.encode(input.content)
   })
@@ -65,7 +66,7 @@ export function registerPurchasableNFTContent(
 
 function handleBase64StringContent(content: string, hash: string | null): ContentInfo {
   const data = b64.decode(content).buffer
-  const uri = Ipfs_Mutation.addFile({ data: data })
+  const uri = Ipfs_Mutation.addFile({ data })
   const sha3 = Sha3_Query.buffer_keccak_256({ message: data })
   if (sha3 !== hash && hash !== null) {
     throw new Error("hash missmatch, are you using sha3?")
@@ -74,8 +75,9 @@ function handleBase64StringContent(content: string, hash: string | null): Conten
 }
 
 function handleUTF8StringContent(content: string, hash: string | null): ContentInfo {
-  const uri = Ipfs_Mutation.addFile({ data: String.UTF8.encode(content) })
-  const sha3 = Sha3_Query.keccak_256({ message: content })
+  const data = String.UTF8.encode(content)
+  const uri = Ipfs_Mutation.addFile({ data })
+  const sha3 = Sha3_Query.buffer_keccak_256({ message: data })
   if (sha3 !== hash && hash !== null) {
     throw new Error("hash missmatch, are you using sha3?")
   }
@@ -93,7 +95,7 @@ function handleURIContent(content: string, hash: string | null): ContentInfo {
 /*
 type ContentHandler = (content: string, hash?: string) => ContentInfo
 */
-
+// TODO can we modularize and release this NFT creation stuff and release is separately?
 function handler(medium: MediaType): (content: string, hash: string | null) => ContentInfo {
   switch (medium) {
     case MediaType.UTF8_STRING:
