@@ -65,11 +65,18 @@ type Mutation {
     minSharePercentage: BigInt!
   ): Ethereum_TxResponse!
 
-  # Do we need this approve? probably not, but might be useful as a
-  # sort of standard library for polywrap
-  approve(
-    address: String!
+  purchase(
     connection: Ethereum_Connection
+    contractAddress: String!
+    nftAddress: String!
+    nftId: BigInt!
+    purchaser: String!
+    numberToBuy: BigInt!
+  ): Ethereum_TxResponse!
+
+  approve(
+    connection: Ethereum_Connection
+    contractAddress: String!
     spender: String!
     amount: BigInt!
   ): Ethereum_TxResponse!

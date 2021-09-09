@@ -106,15 +106,17 @@ async function getClient() {
 // addresses
 const squadUri = '/ens/testnet/squadprotocol.eth'
 
-describe("Squad Content Registrarion", () => {
+describe("Squad Content Network", () => {
 
   let client: Web3ApiClient
   let provider: ethers.providers.JsonRpcProvider
   let creator: string
+  let purchaser: string
   beforeAll(async () => {
     client = await getClient()
     provider = new ethers.providers.JsonRpcProvider("http://localhost:8545")
     creator = await provider.getSigner().getAddress()
+    purchaser = await provider.getSigner(1).getAddress()
   })
 
   let snapshotId: string
@@ -308,6 +310,90 @@ describe("Squad Content Registrarion", () => {
         expect(loggedData).toBe(testCase.variables.data)
       }
     }
+
+    // That content should now be purchasable
+    // test the purchase function here
+
+    expect(purchaser).not.toBe(creator)
+    let holdsLicenseResponse = await client.query<{holdsLicense: boolean}>({
+      uri: squadUri,
+      query: `
+        query holdsLicense {
+          holdsLicense(
+            contractAddress: $contractAddress
+            nftAddress: $nftAddress
+            nftId: $nftId
+            holder: $holder
+          )
+        }
+      `,
+      variables: {
+        contractAddress: config.contracts.PurchasableLicenseManager.address,
+        nftAddress: config.contracts.ERC721Squad.address,
+        nftId: "1",
+        holder: purchaser,
+      }
+    })
+    expect(holdsLicenseResponse.errors).toBeUndefined()
+    expect(holdsLicenseResponse.data?.holdsLicense).toBe(false)
+    await client.query({
+      uri: squadUri,
+      query: `
+        mutation approve{
+          approve(
+            contractAddress: $contractAddress
+            spender: $spender
+            amount: $amount
+          )
+        }
+      `,
+      variables: {
+        contractAddress: config.contracts.ERC20Mintable.address,
+        spender: config.contracts.PurchasableLicenseManager.address,
+        amount: "100000000000000000000", // 100 x 10^18
+      },
+    })
+    const purchaseResponse = await client.query<{purchase: TxResponse}>({
+      uri: squadUri,
+      query: `
+        mutation purchase{
+          purchase(
+            contractAddress: $contractAddress
+            nftAddress: $nftAddress
+            nftId: $nftId
+            purchaser: $purchaser
+            numberToBuy: $numberToBuy
+          )
+        }
+      `,
+      variables: {
+        contractAddress: config.contracts.PurchasableLicenseManager.address,
+        nftAddress: config.contracts.ERC721Squad.address,
+        nftId: "1",
+        purchaser,
+        numberToBuy: "3"
+      },
+    })
+    expect(purchaseResponse.errors).toBeUndefined()
+    holdsLicenseResponse = await client.query<{holdsLicense: boolean}>({
+      uri: squadUri,
+      query: `
+        query holdsLicense {
+          holdsLicense(
+            nftAddress: $nftAddress
+            nftId: $nftId
+            holder: $holder
+          )
+        }
+      `,
+      variables: {
+        nftAddress: config.contracts.ERC721Squad.address,
+        nftId: "1",
+        holder: purchaser,
+      }
+    })
+    expect(holdsLicenseResponse.errors).toBeUndefined()
+    expect(holdsLicenseResponse.data?.holdsLicense).toBe(true)
   })
 
   test("Registers existing NFT as purchasable", async () => {

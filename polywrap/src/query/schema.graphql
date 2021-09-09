@@ -3,6 +3,14 @@
 #import { Query } into GraphNode from "w3://ens/graph-node.web3api.eth"
 
 type Query {
+  holdsLicense(
+    contractAddress: String!
+    connection: Ethereum_Connection
+    nftAddress: String!
+    nftId: BigInt!
+    holder: String!
+  ): Boolean!
+
   balanceOf(
     address: String!
     connection: Ethereum_Connection!

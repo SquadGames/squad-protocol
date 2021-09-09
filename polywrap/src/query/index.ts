@@ -6,9 +6,20 @@ import {
   Input_getLastNftData,
   GraphNode_Query,
   Input_queryGraphNode,
+  Input_holdsLicense,
 } from "./w3";
 
 import { BigInt } from "@web3api/wasm-as"
+
+export function holdsLicense(input: Input_holdsLicense): bool {
+  const res = Ethereum_Query.callContractView({
+    address: input.contractAddress,
+    method: "function holdsLicense(address,uint256,address) view returns(bool)",
+    args: [input.nftAddress, input.nftId.toString(), input.holder],
+    connection: input.connection,
+  })
+  return res === "true" ? true : false
+}
 
 const SUBGRAPH_API_URL =
   'http://127.0.0.1:8000/subgraphs/name/squadgames/squad-POC-subgraph'
