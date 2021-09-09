@@ -22,6 +22,16 @@ type Mutation {
     data: String
   ): Ethereum_TxResponse! # ID or maybe the content object?
 
+    registerRevShareNFTContent(
+    connection: Ethereum_Connection
+    licenseManagerAddress: String!
+    nftAddress: String!
+    nftId: BigInt!
+    registrant: String!
+    minSharePercentage: BigInt!
+    data: String
+  ): Ethereum_TxResponse!
+
   registerPurchasableContent(
     connection: Ethereum_Connection
     creatorAddress: String!
@@ -34,28 +44,26 @@ type Mutation {
     metadataHash: String
     registrant: String!
     data: String
+
     price: BigInt!
     sharePercentage: BigInt!
   ): Ethereum_TxResponse! # ID or maybe the content object?
 
-  registerRevShareNFTContent(
-    nftAddress: String!
-    nftId: BigInt!
-    registrant: String!
-    data: String
-    licenseManagerAddress: String!
-    minSharePercentage: BigInt!
-  ): String!
-
   registerRevShareContent(
+    connection: Ethereum_Connection
     creatorAddress: String!
     licenseManagerAddress: String!
+    contentMedium: MediaType!
     content: String!
+    contentHash: String
+    metadataMedium: MediaType!
     metadata: String!
+    metadataHash: String
     registrant: String!
     data: String
+
     minSharePercentage: BigInt!
-  ): String!
+  ): Ethereum_TxResponse!
 
   # Do we need this approve? probably not, but might be useful as a
   # sort of standard library for polywrap
