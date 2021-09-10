@@ -126,6 +126,38 @@ describe("Squad Content Registrarion", () => {
     await provider.send('evm_revert', [snapshotId])
   })
 
+  test("Registers new NFTs for rev share content", async () => {
+    const result = await client.query<{ registerPurchasableContent: TxResponse }>({
+      uri: squadUri,
+      query: `
+          mutation registerRevShareContent {
+            registerRevShareContent(
+              creatorAddress: $creatorAddress
+              licenseManagerAddress: $licenseManagerAddress
+              content: $content
+              contentMedium: $contentMedium
+              metadata: $metadata
+              metadataMedium: $metadataMedium
+              registrant: $registrant
+              minSharePercentage: $minSharePercentage
+              data: $data
+            )
+          }`,
+      variables: {
+        creatorAddress: creator,
+        licenseManagerAddress: config.contracts.RevShareLicenseManager.address,
+        content: "sweet content",
+        contentMedium: "UTF8_STRING",
+        metadata: " { metameta }",
+        metadataMedium: "UTF8_STRING",
+        registrant: creator,
+        minSharePercentage: "10",
+        data: ' { "test": true }',
+      }
+    })
+    expect(result.errors).toBeUndefined()
+  })
+
   test("Registers new NFTs for new purchasable content", async () => {
     // Set up
     const newB64Content: String = Buffer.from("MockRawFileData").toString("base64")
@@ -268,7 +300,7 @@ describe("Squad Content Registrarion", () => {
           config.contracts.ERC721Squad.address
         )
         expect(loggedNftId.toNumber()).toBeLessThan(1000)
-        expect(loggedNftId.toNumber()).toBeGreaterThan(0)
+        expect(loggedNftId.toNumber()).toBeGreaterThan(-1)
         expect(loggedRegistrant).toBe(creator)
         expect(loggedPrice.toNumber()).toBe(price)
         expect(loggedSharePercentage).toBe(sharePercentage)
@@ -373,16 +405,12 @@ describe("Squad Content Registrarion", () => {
 
     const filters = managerContract.filters!.NFTRegistered!()
     // confirm the expected response
-/*    const registerLogs = await provider.getLogs({
-      address: config.contracts.PurchasableLicenseManager.address,
-      topics: managerContract.filters!.NFTRegistered!(),
-    })
-    console.log(registerLogs)
-    expect(registerLogs).toHaveLength(1)
-    const registerLog = registerLogs[0]
-    if (registerLog === undefined){
-      throw new Error("never")
-    }
+    const rawLogs = await provider.getLogs(
+      managerContract.filters!.NFTRegistered!()
+    )
+    const rawRegisterLogs = await provider.getLogs(filters)
+    const rawRegisterLog = rawLogs[rawLogs.length - 1] ?? { topics: [""], data: "" }
+    const registerLog = managerContract.interface.parseLog(rawRegisterLog)
     expect(registerLog.name).toBe("NFTRegistered")
     const [
       loggedNftAddress,
@@ -392,13 +420,13 @@ describe("Squad Content Registrarion", () => {
       loggedSharePercentage,
       loggedLicenseTokenAddress,
       loggedData,
-    ] = registerLog?.args ?? []
+    ] = registerLog.args ?? []
 
     expect(loggedNftAddress).toBe(nftAddress)
     expect(loggedNftId.toNumber()).toBe(nftId)
     expect(loggedRegistrant).toBe(registrant)
     expect(loggedPrice.toNumber()).toBe(price)
     expect(loggedSharePercentage).toBe(sharePercentage)
-    expect(loggedData).toBe(data) */
+    expect(loggedData).toBe(data)
   })
 })

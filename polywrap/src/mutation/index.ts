@@ -1,6 +1,7 @@
 import {
   Ethereum_Mutation,
   Ethereum_TxResponse,
+  Ethereum_Connection,
   Ipfs_Mutation,
   Input_mintNFT,
   Input_registerPurchasableNFTContent,
@@ -59,8 +60,7 @@ export function registerPurchasableNFTContent(
     connection: input.connection,
     txOverrides: null,
   })
-
-  return res
+ return res
 }
 
 
@@ -118,21 +118,24 @@ enum MediaType {
   URI,
 }
 
-const createAndRegisterNFTAbi = "function createAndRegisterNFT(address,string,string,bytes32,bytes32,uint256,uint8,string)"
-
-export function registerPurchasableContent(
-  input: Input_registerPurchasableContent
+export function registerContent(
+  licenseManagerAddress: string,
+  methodAbi: string,
+  tailArgs: string[],
+  creatorAddress: string,
+  content: string,
+  contentMedium: MediaType,
+  contentHash: string | null,
+  metadata: string,
+  metadataMedium: MediaType,
+  metadataHash: string | null,
+  connection: Ethereum_Connection | null,
+  data: string | null,
 ): Ethereum_TxResponse {
 
   // put the content and metadata on IPFS and get their URIs
-  const contentInfo = handler(input.contentMedium)(
-    input.content,
-    input.contentHash,
-  )
-  const metadataInfo = handler(input.metadataMedium)(
-    input.metadata,
-    input.metadataHash,
-  )
+  const contentInfo = handler(contentMedium)(content, contentHash)
+  const metadataInfo = handler(metadataMedium)(metadata, metadataHash)
 
   // Handle cases where the hash does and does not have the 0x prefix
   const contentHash = contentInfo.sha3.length === 64
@@ -142,18 +145,56 @@ export function registerPurchasableContent(
     ? `0x${contentInfo.sha3}`
     : metadataInfo.sha3
 
-  const data: string = input.data === null ? "" : input.data!
+  data = data === null ? "" : data
   const res: Ethereum_TxResponse = Ethereum_Mutation.callContractMethod({
-    address: input.licenseManagerAddress,
-    method: createAndRegisterNFTAbi,
+    address: licenseManagerAddress,
+    method: methodAbi,
     args: [
-      input.creatorAddress,
+      creatorAddress,
       contentInfo.uri,
       metadataInfo.uri,
       contentHash,
       metadataHash,
-      input.price.toString(),
-      input.sharePercentage.toString(),
+    ].concat(tailArgs).concat([data]),
+    connection: connection,
+    txOverrides: null,
+  })
+
+  return res
+}
+
+export function registerPurchasableContent(
+  input: Input_registerPurchasableContent
+): Ethereum_TxResponse {
+  const createAndRegisterNFTAbi = "function createAndRegisterNFT(address,string,string,bytes32,bytes32,uint256,uint8,string)"
+  return registerContent(
+    input.licenseManagerAddress,
+    createAndRegisterNFTAbi,
+    [input.price.toString(), input.sharePercentage.toString()],
+    input.creatorAddress,
+    input.content,
+    input.contentMedium,
+    input.contentHash,
+    input.metadata,
+    input.metadataMedium,
+    input.metadataHash,
+    input.connection,
+    input.data
+  )
+}
+
+export function registerRevShareNFTContent(
+  input: Input_registerRevShareNFTContent
+): Ethereum_TxResponse {
+  const data: String = input.data === null ? "" : input.data!
+  const res: Ethereum_TxResponse = Ethereum_Mutation.callContractMethod({
+    address: input.licenseManagerAddress,
+    method: "function registerNFT(address,uint256,address,uint8,string)",
+    args: [
+      input.nftAddress,
+      input.nftId.toString(),
+      input.registrant,
+      input.minSharePercentage.toString(),
       data,
     ],
     connection: input.connection,
@@ -163,16 +204,24 @@ export function registerPurchasableContent(
   return res
 }
 
-export function registerRevShareNFTContent(
-  input: Input_registerRevShareNFTContent
-): String {
-  throw new Error("Not Implemented")
-}
-
 export function registerRevShareContent(
   input: Input_registerRevShareContent
-): String {
-  throw new Error("Not Implemented")
+): Ethereum_TxResponse {
+  const createAndRegisterNFTAbi = "function createAndRegisterNFT(address,string,string,bytes32,bytes32,uint8,string)"
+  return registerContent(
+    input.licenseManagerAddress,
+    createAndRegisterNFTAbi,
+    [input.minSharePercentage.toString()],
+    input.creatorAddress,
+    input.content,
+    input.contentMedium,
+    input.contentHash,
+    input.metadata,
+    input.metadataMedium,
+    input.metadataHash,
+    input.connection,
+    input.data,
+  )
 }
 
 export function approve(input: Input_approve): Ethereum_TxResponse {
