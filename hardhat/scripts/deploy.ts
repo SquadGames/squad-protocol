@@ -41,6 +41,17 @@ async function main (): Promise<void> {
     abiPath: getAbiPath('ERC20Mintable')
   }
 
+  // mint some erc20 for the test accounts
+  const rpcProvider = new ethers.providers.JsonRpcProvider(network)
+  const testAccounts = await rpcProvider.listAccounts()
+  if (testAccounts.length === 10 &&  testAccounts[0] === '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1') {
+    for(const i in testAccounts) {
+      const testAccount = testAccounts[i]
+      await erc20.mint(testAccount, ethers.utils.parseEther('500'))
+      console.log(`minted 500 fDai for ${testAccount}`)
+    }
+  }
+
   const royalties = await RoyaltiesFactory.deploy(erc20.address)
   console.log(`Royalties deployed to ${royalties.address}`)
   config.contracts.Royalties = {

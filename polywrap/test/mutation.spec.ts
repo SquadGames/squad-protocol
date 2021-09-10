@@ -336,7 +336,7 @@ describe("Squad Content Network", () => {
     })
     expect(holdsLicenseResponse.errors).toBeUndefined()
     expect(holdsLicenseResponse.data?.holdsLicense).toBe(false)
-    await client.query({
+    const approveResponse = await client.query<{approve: TxResponse}>({
       uri: squadUri,
       query: `
         mutation approve{
@@ -344,15 +344,58 @@ describe("Squad Content Network", () => {
             contractAddress: $contractAddress
             spender: $spender
             amount: $amount
+            connection: {
+              provider: "http://localhost:8545"
+              signer: "${purchaser}"
+            }
           )
         }
       `,
       variables: {
         contractAddress: config.contracts.ERC20Mintable.address,
         spender: config.contracts.PurchasableLicenseManager.address,
-        amount: "100000000000000000000", // 100 x 10^18
+        amount: ethers.utils.parseEther("500").toString(),
       },
     })
+    console.log("approve Errors", approveResponse.errors)
+    const approveTx = await provider.getTransaction(approveResponse.data!.approve!.hash)
+    await approveTx.wait()
+    const purchaserBalance = await client.query({
+      uri: squadUri,
+      query: `
+        query balanceOf {
+balanceOf(
+          address: $addr
+          account: $acc
+        )
+}`,
+      variables: {
+        addr: config.contracts.ERC20Mintable.address,
+        acc: purchaser
+      }
+    })
+    const allowance = await client.query({
+      uri: squadUri,
+      query: `
+        query allowance {
+          allowance(
+            connection: {
+              provider: "http://localhost:8545"
+              signer: "1"
+            }
+            address: $addr
+            owner: $owner
+            spender: $spender
+          )
+        }
+      `,
+      variables: {
+        addr: config.contracts.ERC20Mintable.address,
+        spender: config.contracts.PurchasableLicenseManager.address,
+        owner: purchaser
+      }
+    })
+    console.log(purchaserBalance, allowance)
     const purchaseResponse = await client.query<{purchase: TxResponse}>({
       uri: squadUri,
       query: `
@@ -371,7 +414,7 @@ describe("Squad Content Network", () => {
         nftAddress: config.contracts.ERC721Squad.address,
         nftId: "1",
         purchaser,
-        numberToBuy: "3"
+        numberToBuy: "1"
       },
     })
     expect(purchaseResponse.errors).toBeUndefined()

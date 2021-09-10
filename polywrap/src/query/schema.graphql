@@ -13,20 +13,20 @@ type Query {
 
   balanceOf(
     address: String!
-    connection: Ethereum_Connection!
+    connection: Ethereum_Connection
     account: String!
   ): BigInt!
 
   allowance(
     address: String!
-    connection: Ethereum_Connection!
+    connection: Ethereum_Connection
     owner: String!
     spender: String!
   ): BigInt!
 
   getLastNftData(
     address: String!
-    connection: Ethereum_Connection!
+    connection: Ethereum_Connection
   ): String!
 
   queryGraphNode(
