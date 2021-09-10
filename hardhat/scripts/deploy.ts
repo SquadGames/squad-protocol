@@ -44,7 +44,7 @@ async function main (): Promise<void> {
   // mint some erc20 for the test accounts
   const rpcProvider = new ethers.providers.JsonRpcProvider(network)
   const testAccounts = await rpcProvider.listAccounts()
-  if (testAccounts.length === 10 &&  testAccounts[0] === '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1') {
+  if (testAccounts.length === 10 && testAccounts[0] === '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1') {
     for(const i in testAccounts) {
       const testAccount = testAccounts[i]
       await erc20.mint(testAccount, ethers.utils.parseEther('500'))

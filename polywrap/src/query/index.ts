@@ -18,7 +18,7 @@ export function holdsLicense(input: Input_holdsLicense): bool {
     args: [input.nftAddress, input.nftId.toString(), input.holder],
     connection: input.connection,
   })
-  return res === "true" ? true : false
+  return res == "true"
 }
 
 const SUBGRAPH_API_URL =

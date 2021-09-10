@@ -49,7 +49,7 @@ jest.setTimeout(120000)
 
 const config = getConfig()
 
-async function getClient() {
+async function getClient(signer: number = 0) {
   // fetch providers from dev server
   const {
     data: { ipfs, ethereum },
@@ -78,7 +78,7 @@ async function getClient() {
           networks: {
             testnet: {
               provider: ethereum,
-              signer: 0
+              signer: signer
             }
           },
           // If defaultNetwork is not specified, mainnet will be used.
@@ -109,12 +109,14 @@ const squadUri = '/ens/testnet/squadprotocol.eth'
 describe("Squad Content Network", () => {
 
   let client: Web3ApiClient
+  let purchaserClient: Web3ApiClient
   let provider: ethers.providers.JsonRpcProvider
   let creator: string
   let purchaser: string
   beforeAll(async () => {
-    client = await getClient()
     provider = new ethers.providers.JsonRpcProvider("http://localhost:8545")
+    client = await getClient()
+    purchaserClient = await getClient(1)
     creator = await provider.getSigner().getAddress()
     purchaser = await provider.getSigner(1).getAddress()
   })
@@ -336,7 +338,7 @@ describe("Squad Content Network", () => {
     })
     expect(holdsLicenseResponse.errors).toBeUndefined()
     expect(holdsLicenseResponse.data?.holdsLicense).toBe(false)
-    const approveResponse = await client.query<{approve: TxResponse}>({
+    const approveResponse = await purchaserClient.query<{approve: TxResponse}>({
       uri: squadUri,
       query: `
         mutation approve{
@@ -344,10 +346,6 @@ describe("Squad Content Network", () => {
             contractAddress: $contractAddress
             spender: $spender
             amount: $amount
-            connection: {
-              provider: "http://localhost:8545"
-              signer: "${purchaser}"
-            }
           )
         }
       `,
@@ -357,46 +355,11 @@ describe("Squad Content Network", () => {
         amount: ethers.utils.parseEther("500").toString(),
       },
     })
-    console.log("approve Errors", approveResponse.errors)
+    expect(approveResponse.errors).toBeUndefined()
     const approveTx = await provider.getTransaction(approveResponse.data!.approve!.hash)
     await approveTx.wait()
-    const purchaserBalance = await client.query({
-      uri: squadUri,
-      query: `
-        query balanceOf {
-balanceOf(
-          address: $addr
-          account: $acc
-        )
-}`,
-      variables: {
-        addr: config.contracts.ERC20Mintable.address,
-        acc: purchaser
-      }
-    })
-    const allowance = await client.query({
-      uri: squadUri,
-      query: `
-        query allowance {
-          allowance(
-            connection: {
-              provider: "http://localhost:8545"
-              signer: "1"
-            }
-            address: $addr
-            owner: $owner
-            spender: $spender
-          )
-        }
-      `,
-      variables: {
-        addr: config.contracts.ERC20Mintable.address,
-        spender: config.contracts.PurchasableLicenseManager.address,
-        owner: purchaser
-      }
-    })
-    console.log(purchaserBalance, allowance)
-    const purchaseResponse = await client.query<{purchase: TxResponse}>({
+
+    const purchaseResponse = await purchaserClient.query<{purchase: TxResponse}>({
       uri: squadUri,
       query: `
         mutation purchase{
@@ -418,11 +381,22 @@ balanceOf(
       },
     })
     expect(purchaseResponse.errors).toBeUndefined()
+    const purchaseTx = await provider.getTransaction(purchaseResponse.data!.purchase!.hash)
+    const purchaseReciept = await purchaseTx.wait()
+    const PurchaseAbi = "Purchase(address,uint256,address,uint256,uint256,address)"
+    const managerContract = new Contract(
+      config.contracts.PurchasableLicenseManager.address,
+      [`event ${PurchaseAbi}`],
+      provider,
+    )
+    const rawLogs = await provider.getLogs(managerContract.filters!.Purchase!())
+    expect(rawLogs).toHaveLength(1)
     holdsLicenseResponse = await client.query<{holdsLicense: boolean}>({
       uri: squadUri,
       query: `
         query holdsLicense {
           holdsLicense(
+            contractAddress: $contractAddress
             nftAddress: $nftAddress
             nftId: $nftId
             holder: $holder
@@ -430,6 +404,7 @@ balanceOf(
         }
       `,
       variables: {
+        contractAddress: config.contracts.PurchasableLicenseManager.address,
         nftAddress: config.contracts.ERC721Squad.address,
         nftId: "1",
         holder: purchaser,
@@ -534,11 +509,9 @@ balanceOf(
 
     const filters = managerContract.filters!.NFTRegistered!()
     // confirm the expected response
-    const rawLogs = await provider.getLogs(
-      managerContract.filters!.NFTRegistered!()
-    )
     const rawRegisterLogs = await provider.getLogs(filters)
-    const rawRegisterLog = rawLogs[rawLogs.length - 1] ?? { topics: [""], data: "" }
+    const rawRegisterLog = rawRegisterLogs[rawRegisterLogs.length - 1]
+      ?? { topics: [""], data: "" }
     const registerLog = managerContract.interface.parseLog(rawRegisterLog)
     expect(registerLog.name).toBe("NFTRegistered")
     const [
