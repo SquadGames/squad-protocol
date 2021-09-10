@@ -8,6 +8,7 @@ import {
   Input_registerRevShareNFTContent,
   Input_registerPurchasableContent,
   Input_registerRevShareContent,
+  Input_purchase,
   Input_approve,
   Sha3_Query,
 } from "./w3"
@@ -18,6 +19,23 @@ import * as b64 from 'as-base64'
 class ContentInfo {
   uri: string
   sha3: string
+}
+
+export function purchase(input: Input_purchase): Ethereum_TxResponse {
+  const res: Ethereum_TxResponse = Ethereum_Mutation.callContractMethod({
+    connection: input.connection,
+    address: input.contractAddress,
+    method: "function purchase(address,uint256,address,uint256)",
+    args: [
+      input.nftAddress,
+      input.nftId.toString(),
+      input.purchaser,
+      input.numberToBuy.toString(),
+    ],
+    txOverrides: null,
+  })
+
+  return res
 }
 
 export function mintNFT(input: Input_mintNFT): Ethereum_TxResponse {
@@ -225,12 +243,12 @@ export function registerRevShareContent(
 }
 
 export function approve(input: Input_approve): Ethereum_TxResponse {
-  const txResponse: Ethereum_TxResponse = Ethereum_Mutation.callContractMethod({
-    address: input.address,
-    method: "function approve(address spender,uint256 amount) returns(bool)",
+  const res: Ethereum_TxResponse = Ethereum_Mutation.callContractMethod({
+    address: input.contractAddress,
+    method: "function approve(address,uint256)",
     args: [input.spender, input.amount.toString()],
     connection: input.connection,
-    txOverrides: null
-  });
-  return txResponse;
+    txOverrides: null,
+  })
+  return res
 }
