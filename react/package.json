@@ -9,6 +9,8 @@
   "dependencies": {
     "@apollo/client": "^3.4.11",
     "@web3api/client-js": "^0.0.1-prealpha.40",
+    "@web3api/react": "^0.0.1-prealpha.40",
+    "axios": "^0.21.4",
     "graphql": "^15.5.3",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
