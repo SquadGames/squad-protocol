@@ -211,13 +211,17 @@ export async function mintAndIncrement (): Promise<number> {
   return res.blockNumber
 }
 
+export async function getPercentScale (): Promise<ethers.BigNumber> {
+  return await royalties.PERCENTAGE_SCALE()
+}
+
 export async function getBalanceForWindow (index: number): Promise<number> {
   const windowFunds = await royalties.balanceForWindow(index)
   return Number(windowFunds)
 }
 
 export async function getTotalClaimableBalance (): Promise<ethers.BigNumber> {
-  return royalties.totalClaimableBalance()
+  return await royalties.totalClaimableBalance()
 }
 
 export async function getCurrentWindow (): Promise<number> {
