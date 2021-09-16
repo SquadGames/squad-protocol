@@ -32,7 +32,7 @@ contract Royalties is Ownable {
     uint256 public totalClaimableBalance;
     mapping(bytes32 => bool) internal claimed;
 
-    uint256 public constant PERCENTAGE_SCALE = 10e5;
+    uint256 public constant PERCENTAGE_SCALE = 10e18;
 
 
     //======== Events ========

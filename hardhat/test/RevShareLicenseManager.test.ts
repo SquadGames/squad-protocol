@@ -1,7 +1,7 @@
 /**
  * Tests
  *  - on registerNFT, stores new valid LicenseParams and emits event
- *  - on registerNFT, fails if sharePercentage is greater than 100
+ *  - on registerNFT, fails if share basis points is greater than 100
  *  - on registerNFT, fails if registrant does not own the NFT
  *  - on createAndRegisterNFT, mints a new NFT to the msg.sender and calls registerNFT
  *  - on unregisterNFT, deletes LicenseParams and emits event
@@ -80,21 +80,21 @@ describe('RevShareLicenseManager', () => {
 
       const registered = await revShareLicense.registeredNFTs(squadNft.address, 0)
       assert.isTrue(registered, 'registered')
-      const sharePercent = Number(await revShareLicense.minSharePercentages(squadNft.address, 0))
-      assert.equal(sharePercent, 20)
+      const shareBasisPoints = Number(await revShareLicense.minShareBasisPointsMap(squadNft.address, 0))
+      assert.equal(shareBasisPoints, 20)
     })
 
-    it('fails if sharePercentage is greater than 100', async () => {
+    it('fails if minShareBasisPoints is greater than 10000', async () => {
       await mintNFT()
 
       await expect(licenseAlice.registerNFT(
         squadNft.address,
         0,
         await alice.getAddress(),
-        101,
+        10001,
         'type'
       ))
-        .to.be.revertedWith('minSharePercentage greater than 100.')
+        .to.be.revertedWith('minShareBasisPoints greater than 100.')
     })
 
     it('fails if registrant does not own the NFT', async () => {
@@ -152,14 +152,18 @@ describe('RevShareLicenseManager', () => {
         'type'
       )
 
+      // TODO should confirm registration here (and in other test)
+
       await expect(licenseAlice.unregisterNFT(
         squadNft.address,
         0
       ))
         .to.emit(revShareLicense, 'NFTUnregistered')
 
-      const sharePercent = Number(await revShareLicense.registeredNFTs(squadNft.address, 0))
-      assert.equal(sharePercent, 0)
+      const registered = await revShareLicense.registeredNFTs(squadNft.address, 0)
+      assert.equal(registered, false)
+      const minShareBasisPoints = Number(await revShareLicense.minShareBasisPointsMap(squadNft.address, 0))
+      assert.equal(minShareBasisPoints, 0)
     })
 
     it('fails if NFT is not registered', async () => {

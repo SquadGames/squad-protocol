@@ -37,7 +37,7 @@ describe('Royalties', () => {
   let erc20: ERC20Mintable
   let royalties: Royalties
 
-  const PERCENTAGE_SCALE = 10e5
+  const PERCENTAGE_SCALE = 10e18
 
   async function getTree (): Promise<MerkleTree> {
     const signers = [owner, alice, bob, charlie, dia]

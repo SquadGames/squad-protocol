@@ -31,7 +31,6 @@ type PurchasableLicense implements License @entity {
   content: Content!
   registrant: Bytes!
   price: BigInt!
-  sharePercentage: Int!
   licenseTokenAddress: Bytes!
   purchases: [PurchaseEvent!]! @derivedFrom(field: "license")
 }
@@ -51,7 +50,7 @@ type RevShareLicense implements License @entity {
   licenseManagerAddress: Bytes!
   content: Content!
   registrant: Bytes!
-  minSharePercentage: Int!
+  minShareBasisPoints: Int!
 }
 
 type Window @entity {

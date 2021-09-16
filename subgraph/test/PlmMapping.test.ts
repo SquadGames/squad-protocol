@@ -18,7 +18,6 @@ import { ethers } from 'ethers'
 import { assert } from 'chai'
 import {
   DEF_PRICE,
-  DEF_SHARE,
   DEF_TYPE,
   PURCHASABLE_LM_ADDR,
   NFT,
@@ -39,7 +38,6 @@ import {
 async function checkNftRegistrationPL (
   nft: NFT,
   price: ethers.BigNumber,
-  share: number,
   type: string,
   underlyingWorks: any[]
 ): Promise<void> {
@@ -58,7 +56,6 @@ async function checkNftRegistrationPL (
   assert.equal(license.licenseTokenAddress, licenseTokenAddr, 'license token address')
   assert.equal(license.registrant, aliceAddress.toLowerCase(), 'license registrant')
   assert.equal(license.price, price, 'license price')
-  assert.equal(license.sharePercentage, share, 'license share percentage')
 }
 
 describe('PurchasableLicenseManager mapping', function (this: any) {
@@ -69,25 +66,24 @@ describe('PurchasableLicenseManager mapping', function (this: any) {
 
   it('should add a license on NFTRegistered event', async () => {
     nft1 = await mintAndRegisterPL([])
-    await checkNftRegistrationPL(nft1, DEF_PRICE, DEF_SHARE, DEF_TYPE, [])
+    await checkNftRegistrationPL(nft1, DEF_PRICE, DEF_TYPE, [])
   })
 
   it('should replace existing license on NFTRegistered event', async () => {
     content1 = await queryContent(nft1)
     const nft = await mintAndRegisterPL([content1.id])
-    await checkNftRegistrationPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, [{ id: content1.id }])
+    await checkNftRegistrationPL(nft, DEF_PRICE, DEF_TYPE, [{ id: content1.id }])
     const newPrice = ethers.utils.parseEther('11')
-    const newShare = 51
     const newType = 'text'
     const newUnderlyingWorks = ['0x9876543']
-    await registerPL(nft, newPrice, newShare, newType, newUnderlyingWorks)
+    await registerPL(nft, newPrice, newType, newUnderlyingWorks)
     await delay()
-    await checkNftRegistrationPL(nft, newPrice, newShare, newType, [])
+    await checkNftRegistrationPL(nft, newPrice, newType, [])
   })
 
   it('should delete a license on NFTUnregistered event', async () => {
     const nft = await mintAndRegisterPL([content1.id])
-    await checkNftRegistrationPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, [{ id: content1.id }])
+    await checkNftRegistrationPL(nft, DEF_PRICE, DEF_TYPE, [{ id: content1.id }])
     await unregisterPL(nft)
     const licenses = await queryPurchasableLicenses(nft, PURCHASABLE_LM_ADDR)
     assert.equal(licenses.length, 0)
@@ -95,7 +91,7 @@ describe('PurchasableLicenseManager mapping', function (this: any) {
 
   it('should record a Purchase', async () => {
     const nft = await mintAndRegisterPL([content1.id])
-    await checkNftRegistrationPL(nft, DEF_PRICE, DEF_SHARE, DEF_TYPE, [{ id: content1.id }])
+    await checkNftRegistrationPL(nft, DEF_PRICE, DEF_TYPE, [{ id: content1.id }])
     const blockNumber = await mintDaiAndPurchase(nft, DEF_PRICE)
     const purchase = (await queryPurchases(nft, PURCHASABLE_LM_ADDR))[0]
     const licenseTokenAddr: string = (

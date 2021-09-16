@@ -1,7 +1,6 @@
 /**
  * Tests:
  *  - on registerNFT, stores new valid LicenseParams and emits event
- *  - on registerNFT, fails if sharePercentage is greater than 100
  *  - on registerNFT, fails if registrant does not own the NFT
  *  - __on registerNFT, fails if NFT does not exist (nevermind, the NFT contract already covers this)
  *  - on registerNFT, replaces an old license for the same NFT
@@ -87,7 +86,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         ethers.utils.parseEther('10'),
-        50,
         'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
@@ -97,11 +95,8 @@ describe('PurchasableLicenseManager', () => {
       // price
       assert.equal(Number(licenseParams[0]), Number(ethers.utils.parseEther('10')))
 
-      // share percentage
-      assert.equal(Number(licenseParams[1]), 50)
-
       // license token
-      const licenseToken = erc20.attach(licenseParams[2])
+      const licenseToken = erc20.attach(licenseParams[1])
       const balance = await licenseToken.balanceOf(await alice.getAddress())
       assert.equal(
         Number(balance),
@@ -117,7 +112,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         ethers.utils.parseEther('10'),
-        50,
         'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
@@ -129,7 +123,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         ethers.utils.parseEther('11'),
-        51,
         'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
@@ -139,25 +132,8 @@ describe('PurchasableLicenseManager', () => {
       // price
       assert.equal(Number(licenseParams[0]), Number(ethers.utils.parseEther('11')))
 
-      // share percentage
-      assert.equal(Number(licenseParams[1]), 51)
-
       // license token
-      assert.notEqual(licenseParams[2], firstLicenseParams[2])
-    })
-
-    it('fails if sharePercentage is greater than 100', async () => {
-      await mintNFT()
-
-      await expect(licenseAlice.registerNFT(
-        squadNft.address,
-        0,
-        await alice.getAddress(),
-        10,
-        101,
-        'type'
-      ))
-        .to.be.revertedWith('sharePercentage greater than 100.')
+      assert.notEqual(licenseParams[1], firstLicenseParams[1])
     })
 
     it('fails if registrant does not own the NFT', async () => {
@@ -168,7 +144,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await owner.getAddress(),
         10,
-        50,
         'type'
       ))
         .to.be.revertedWith('Registrant does not own NFT.')
@@ -185,7 +160,6 @@ describe('PurchasableLicenseManager', () => {
         tokenData.contentHash,
         tokenData.metadataHash,
         10,
-        50,
         'type'
       ))
         .to.emit(purchasableLicense, 'NFTRegistered')
@@ -209,7 +183,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        50,
         'type'
       )
 
@@ -227,7 +200,7 @@ describe('PurchasableLicenseManager', () => {
         squadNft.address,
         0
       )
-      assert.equal(licenseParams[2], '0x0000000000000000000000000000000000000000')
+      assert.equal(licenseParams[1], '0x0000000000000000000000000000000000000000')
     })
 
     it('fails if NFT is not registered', async () => {
@@ -249,7 +222,6 @@ describe('PurchasableLicenseManager', () => {
       0,
       await alice.getAddress(),
       ethers.utils.parseEther('10'),
-      50,
       'type'
     )
 
@@ -261,7 +233,7 @@ describe('PurchasableLicenseManager', () => {
     const licenseTokenAddress = (await purchasableLicense.registeredNFTs(
       squadNft.address,
       0
-    ))[2]
+    ))[1]
 
     await expect(purchasableLicense.purchase(
       squadNft.address,
@@ -296,7 +268,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        50,
         'type'
       )
 
@@ -330,7 +301,6 @@ describe('PurchasableLicenseManager', () => {
         0,
         await alice.getAddress(),
         10,
-        50,
         'type'
       )
 
@@ -349,7 +319,7 @@ describe('PurchasableLicenseManager', () => {
       const licenseTokenAddress = (await purchasableLicense.registeredNFTs(
         squadNft.address,
         0
-      ))[2]
+      ))[1]
       const licenseToken = erc20.attach(licenseTokenAddress)
       const licenseOwner = licenseToken.connect(owner)
       await licenseOwner.transfer(

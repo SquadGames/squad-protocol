@@ -13,7 +13,7 @@
 import { assert } from 'chai'
 import {
   REV_SHARE_LM_ADDR,
-  DEF_SHARE,
+  DEF_BASIS,
   DEF_TYPE,
   NFT,
   queryContent,
@@ -29,7 +29,7 @@ import {
 
 async function checkNftRegistrationRSL (
   nft: NFT,
-  share: number,
+  basis: number,
   type: string,
   underlyingWorks: any[]
 ): Promise<void> {
@@ -46,7 +46,7 @@ async function checkNftRegistrationRSL (
   assert.equal(license.id, makeLicenseId(nft, REV_SHARE_LM_ADDR), 'license id')
   assert.equal(license.licenseManagerAddress, REV_SHARE_LM_ADDR, 'license manager address')
   assert.equal(license.registrant, aliceAddress.toLowerCase(), 'license registrant')
-  assert.equal(license.minSharePercentage, share, 'license share percentage')
+  assert.equal(license.minShareBasisPoints, basis, 'license share percentage')
 }
 
 describe('RevShareLicenseManager mapping', function (this: any) {
@@ -57,24 +57,24 @@ describe('RevShareLicenseManager mapping', function (this: any) {
 
   it('should add a license on NFTRegistered event', async () => {
     nft1 = await mintAndRegisterRSL([])
-    await checkNftRegistrationRSL(nft1, DEF_SHARE, DEF_TYPE, [])
+    await checkNftRegistrationRSL(nft1, DEF_BASIS, DEF_TYPE, [])
   })
 
   it('should replace existing license on NFTRegistered event', async () => {
     content1 = await queryContent(nft1)
     const nft = await mintAndRegisterRSL([content1.id])
-    await checkNftRegistrationRSL(nft, DEF_SHARE, DEF_TYPE, [{ id: content1.id }])
-    const newShare = 51
+    await checkNftRegistrationRSL(nft, DEF_BASIS, DEF_TYPE, [{ id: content1.id }])
+    const newBasis = 5001
     const newType = 'text'
     const newUnderlyingWorks = ['0x9876543']
-    await registerRSL(nft, newShare, newType, newUnderlyingWorks)
+    await registerRSL(nft, newBasis, newType, newUnderlyingWorks)
     await delay()
-    await checkNftRegistrationRSL(nft, newShare, newType, [])
+    await checkNftRegistrationRSL(nft, newBasis, newType, [])
   })
 
   it('should delete a license on NFTUnregistered event', async () => {
     const nft = await mintAndRegisterRSL([content1.id])
-    await checkNftRegistrationRSL(nft, DEF_SHARE, DEF_TYPE, [{ id: content1.id }])
+    await checkNftRegistrationRSL(nft, DEF_BASIS, DEF_TYPE, [{ id: content1.id }])
     await unregisterRSL(nft)
     const licenses = await queryRevShareLicenses(nft, REV_SHARE_LM_ADDR)
     assert.equal(licenses.length, 0)

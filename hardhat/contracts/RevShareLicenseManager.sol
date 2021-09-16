@@ -7,7 +7,7 @@ import "./LicenseManager.sol";
 contract RevShareLicenseManager is LicenseManager {
     //======== State ========
 
-    mapping(address => mapping(uint256 => uint8)) public minSharePercentages;
+    mapping(address => mapping(uint256 => uint16)) public minShareBasisPointsMap;
     mapping(address => mapping(uint256 => bool)) public registeredNFTs;
     string public constant NAME = "RevShareLicenseManager";
 
@@ -18,7 +18,7 @@ contract RevShareLicenseManager is LicenseManager {
         address nftAddress, 
         uint256 nftId, 
         address registrant,
-        uint8 minSharePercentage,
+        uint16 minShareBasisPoints,
         string data
     );
 
@@ -40,22 +40,22 @@ contract RevShareLicenseManager is LicenseManager {
         address nftAddress, 
         uint256 nftId, 
         address registrant,
-        uint8 minSharePercentage,
+        uint16 minShareBasisPoints,
         string calldata data
     ) 
         public
     {
         require(ERC721(nftAddress).ownerOf(nftId) == registrant, "Registrant does not own NFT.");
-        require(minSharePercentage <= 100, "minSharePercentage greater than 100.");
+        require(minShareBasisPoints <= 10000, "minShareBasisPoints greater than 100.");
 
-        minSharePercentages[nftAddress][nftId] = minSharePercentage;
+        minShareBasisPointsMap[nftAddress][nftId] = minShareBasisPoints;
         registeredNFTs[nftAddress][nftId] = true;
 
         emit NFTRegistered(
             nftAddress, 
             nftId, 
             registrant,
-            minSharePercentage,
+            minShareBasisPoints,
             data
         );
     }
@@ -69,7 +69,7 @@ contract RevShareLicenseManager is LicenseManager {
         string calldata metadataURI,
         bytes32 contentHash,
         bytes32 metadataHash,
-        uint8 minSharePercentage,
+        uint16 minShareBasisPoints,
         string calldata data
     ) external {
         uint256 nftId = squadNft.mint(
@@ -82,7 +82,7 @@ contract RevShareLicenseManager is LicenseManager {
         registerNFT(
             address(squadNft), 
             nftId, creator, 
-            minSharePercentage, 
+            minShareBasisPoints, 
             data
         );
     }
@@ -94,7 +94,7 @@ contract RevShareLicenseManager is LicenseManager {
     {
         require(registeredNFTs[nftAddress][nftId] == true, "NFT not registered.");
 
-        delete minSharePercentages[nftAddress][nftId];
+        delete minShareBasisPointsMap[nftAddress][nftId];
         registeredNFTs[nftAddress][nftId] = false;
 
         emit NFTUnregistered(

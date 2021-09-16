@@ -25,7 +25,6 @@ export function handleNFTRegisteredPurchasable(event: NFTRegistered): void {
   }
   purchasableLicense.registrant = event.transaction.from
   purchasableLicense.price = event.params.price
-  purchasableLicense.sharePercentage = event.params.sharePercentage
   purchasableLicense.licenseTokenAddress = event.params.licenseTokenAddress
   purchasableLicense.save()
 }

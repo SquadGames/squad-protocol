@@ -11,7 +11,6 @@ contract PurchasableLicenseManager is LicenseManager {
 
     struct LicenseParams {
         uint256 price;
-        uint8 sharePercentage;
         ERC20Mintable licenseToken;
     }
 
@@ -30,8 +29,7 @@ contract PurchasableLicenseManager is LicenseManager {
         address nftAddress, 
         uint256 nftId, 
         address registrant,
-        uint256 price, 
-        uint8 sharePercentage,
+        uint256 price,
         address licenseTokenAddress,
         string data
     );
@@ -70,14 +68,12 @@ contract PurchasableLicenseManager is LicenseManager {
         address nftAddress, 
         uint256 nftId, 
         address registrant,
-        uint256 price, 
-        uint8 sharePercentage,
+        uint256 price,
         string calldata data
     ) 
         public
     {
         require(ERC721(nftAddress).ownerOf(nftId) == registrant, "Registrant does not own NFT.");
-        require(sharePercentage <= 100, "sharePercentage greater than 100.");
 
         ERC721 nft = ERC721(nftAddress);
         string memory name = string(abi.encodePacked(NAME, nft.name(), nftId));
@@ -86,7 +82,6 @@ contract PurchasableLicenseManager is LicenseManager {
         
         registeredNFTs[nftAddress][nftId] = LicenseParams(
             price,
-            sharePercentage,
             licenseToken
         );
         
@@ -95,7 +90,6 @@ contract PurchasableLicenseManager is LicenseManager {
             nftId,
             registrant,
             price,
-            sharePercentage,
             address(licenseToken),
             data
         );
@@ -110,8 +104,7 @@ contract PurchasableLicenseManager is LicenseManager {
         string calldata metadataURI,
         bytes32 contentHash,
         bytes32 metadataHash,
-        uint256 price, 
-        uint8 sharePercentage,
+        uint256 price,
         string calldata data
     ) external {
         uint256 nftId = squadNft.mint(
@@ -125,8 +118,7 @@ contract PurchasableLicenseManager is LicenseManager {
             address(squadNft), 
             nftId, 
             creator, 
-            price, 
-            sharePercentage, 
+            price,
             data
         );
     }

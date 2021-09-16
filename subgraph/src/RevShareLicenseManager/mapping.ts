@@ -24,7 +24,7 @@ export function handleNFTRegisteredRevShare(event: NFTRegistered): void {
     revShareLicense.content = result.contentId
   }
   revShareLicense.registrant = event.transaction.from
-  revShareLicense.minSharePercentage = event.params.minSharePercentage
+  revShareLicense.minShareBasisPoints = event.params.minShareBasisPoints
   revShareLicense.save()
 }
 
