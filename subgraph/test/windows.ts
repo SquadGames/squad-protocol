@@ -1,6 +1,5 @@
 import { ethers } from 'ethers'
 import {
-  getAccounts,
   querySubgraph,
   queryContent,
   sendAliceNFT,
@@ -12,31 +11,63 @@ import {
   DEF_TYPE,
   getPercentScale
 } from './utils'
-import { toHexLeaf, toLeaf, Balance } from '../../hardhat/lib/merkleTools'
-import { MerkleTree, makeMerkleTree, getHexRoot, getHexProof } from '../../lib'
+import { toLeaf, Balance } from '../../hardhat/lib/merkleTools'
+import { MerkleTree, makeMerkleTree } from '../../lib'
 import { abi } from '../../hardhat/artifacts/@openzeppelin/contracts/token/ERC721/ERC721.sol/ERC721.json'
 import { getConfig } from '@squad/lib'
 
 const config = getConfig()
 const provider = ethers.getDefaultProvider(config.networkNameOrUrl)
 
+// Mint a bunch of NFTs that use each other as underlying works and give them different owners
+async function populatePurchases() {
+  const wallet1 = ethers.Wallet.createRandom()
+  const nft1 = await mintAndRegisterPL([])
+  await registerRSL(nft1, 10, DEF_TYPE, [])
+  await sendAliceNFT(nft1, wallet1.address)
+  await delay
+
+  const wallet2 = ethers.Wallet.createRandom()
+  const content1 = await queryContent(nft1)
+  await mintDaiAndPurchase(nft1, DEF_PRICE)
+  const nft2 = await mintAndRegisterPL([content1.id])
+  await registerRSL(nft2, 20, DEF_TYPE, [content1.id])
+  await sendAliceNFT(nft2, wallet2.address)
+  await delay
+
+  const wallet3 = ethers.Wallet.createRandom()
+  const content2 = await queryContent(nft2)
+  await mintDaiAndPurchase(nft2, DEF_PRICE)
+  const nft3 = await mintAndRegisterPL([content1.id, content2.id])
+  await registerRSL(nft3, 30, DEF_TYPE, [content1.id, content2.id])
+  await sendAliceNFT(nft3, wallet3.address)
+  await delay
+  
+  await mintDaiAndPurchase(nft3, DEF_PRICE)
+  console.log('completed purchases')
+}
+
+/**
+ * Units (all using ethers.BigNumber type):
+ * _wei = currency unit
+ * _basisPoints = percentage multiplied by 100 (1 BP = .01 %)
+ * _scaledPercent = percentage multiplied by the PERCENT_SCALE
+ * _shares = rights to revenue in a window
+ */
+
+// the constant used to turn regular percentage into scaled percentage
+let PERCENT_SCALE: ethers.BigNumber
+
+// 100% in "scaled percent" units
+let MAX_scaledPercent: ethers.BigNumber
+
+// total number of shares distributed in a window
+let TOTAL_shares: ethers.BigNumber
+
 interface PurchaseEvent {
   id: string;
   license: any;
   pricePaid: string;
-}
-
-interface Share {
-  contentId: string;
-  nftAddress: string;
-  nftId: string;
-  percentage: ethers.BigNumber;
-}
-
-interface ContentRevShare {
-  contentId: string;
-  amount: ethers.BigNumber;
-  shares: Share[];
 }
 
 interface UnderlyingWork {
@@ -49,96 +80,64 @@ interface UnderlyingWork {
   underlyingWorks: UnderlyingWork[];
 }
 
-// Mint a bunch of NFTs that use each other as underlying works and give them different owners
-async function populatePurchases() {
-  const accounts = await getAccounts()
-  const nft1 = await mintAndRegisterPL([])
-  await registerRSL(nft1, 10, DEF_TYPE, [])
-  await sendAliceNFT(nft1, accounts[1])
-  await delay
-
-  const content1 = await queryContent(nft1)
-  await mintDaiAndPurchase(nft1, DEF_PRICE)
-  const nft2 = await mintAndRegisterPL([content1.id])
-  await registerRSL(nft2, 20, DEF_TYPE, [content1.id])
-  await sendAliceNFT(nft2, accounts[2])
-  await delay
-
-  const content2 = await queryContent(nft2)
-  await mintDaiAndPurchase(nft2, DEF_PRICE)
-  const nft3 = await mintAndRegisterPL([content1.id, content2.id])
-  await registerRSL(nft3, 30, DEF_TYPE, [content1.id, content2.id])
-  await sendAliceNFT(nft3, accounts[3])
-  await delay
-  
-  await mintDaiAndPurchase(nft3, DEF_PRICE)
-  console.log('completed purchases')
+interface RevShare {
+  contentId: string;
+  nftAddress: string;
+  nftId: string;
+  shares: ethers.BigNumber;
 }
 
-// TODO: change the flattening algorithm so that it weights underlying works shares by their individual shareBasisPoints
-// (i.e. work 1 sharing 50% with work 2 and work 3. Work 2 asks for 50%, work 3 asks for 20%. This should work out to:
-// work 1: 50%, work 2: 5/7 * 50% ~ 36%, work 3: 2/7 * 50% ~ 14%)
+function bnMax(numbers: ethers.BigNumber[]): ethers.BigNumber {
+  let result = ethers.BigNumber.from("0")
+  numbers.forEach(n => {
+    if (n.gt(result)) { result = n }
+  })
+  return result
+}
 
+function bnSum(numbers: ethers.BigNumber[]): ethers.BigNumber {
+  return numbers.reduce((total, n) => total.add(n), ethers.BigNumber.from("0"))
+}
 
 function flattenShares(
   baseContentId: string,
   baseContentNftAddress: string,
   baseContentNftId: string,
   underlyingWorks: UnderlyingWork[],
-  totalSharePercent: ethers.BigNumber, // the total percent the results of this function should add up to
-  percentScale: ethers.BigNumber
-): Share[] {
-  let results: Share[] = []
+  localTotal_shares: ethers.BigNumber // the total shares to be split
+): RevShare[] {
+  let results: RevShare[] = []
+
   if (underlyingWorks.length > 0) {
-    let sharePercentage = ethers.BigNumber.from("0")
-    let shareSubTotal = ethers.BigNumber.from("0")
-    // find the highest minShareBasisPoints among the underlying works 
-    // (this will be the percent split between UWs)
-    // also find the total of the minShareBasis points
-    // (this will be used to calc how much each UW gets)
-    underlyingWorks.forEach(uw => {
-      // TODO in the future, if there is more than one kind of revShareLicense, we will need to figure out which 
-      // to look at here. If not, we should switch to only allowing a single revShareLicense (no array)
-      const rsl = uw.revShareLicenses[0]
-      shareSubTotal = ethers.BigNumber.from(rsl.minShareBasisPoints).add(shareSubTotal)
-      if (ethers.BigNumber.from(rsl.minShareBasisPoints).gt(sharePercentage)) {
-        sharePercentage = ethers.BigNumber.from(rsl.minShareBasisPoints)
-      }
+    // get max and total basisPoints from underlying works
+    const basisPoints: ethers.BigNumber[] = underlyingWorks.map(uw => {
+      return ethers.BigNumber.from(uw.revShareLicenses[0].minShareBasisPoints)
     })
-    // convert sharePercentage from basis points to percent * percentScale
-    sharePercentage = sharePercentage.mul(percentScale).div(100)
-    // add baseContent to results
+    const uwMax_basisPoints = bnMax(basisPoints)
+    const uwTotal_basisPoints = bnSum(basisPoints)
+    const uwMax_shares = uwMax_basisPoints.mul(localTotal_shares).div(100)
+
+    // add base content to results
     results.push({
       contentId: baseContentId,
       nftAddress: baseContentNftAddress,
       nftId: baseContentNftId,
-      percentage: percentScale.mul(100).sub(sharePercentage)
+      shares: localTotal_shares.sub(uwMax_shares)
     })
+
     // recursively flatten underlyingWorks shares
     underlyingWorks.forEach(uw => {
-      const uwShare = ethers.BigNumber.from(uw.revShareLicenses[0].minShareBasisPoints)
-      const percentForUw = sharePercentage.mul(uwShare).div(shareSubTotal)
-      // if we need to go a layer deeper
-      if(uw.underlyingWorks.length > 0) {
-        results = results.concat(
-          flattenShares(
-            uw.id,
-            uw.nftAddress,
-            uw.nftId,
-            uw.underlyingWorks,
-            percentForUw,
-            percentScale
-          )
+      const uw_basisPoints = ethers.BigNumber.from(uw.revShareLicenses[0].minShareBasisPoints)
+      const uw_shares = uwMax_shares.mul(uw_basisPoints).div(uwTotal_basisPoints)
+      results = results.concat(
+        flattenShares(
+          uw.id,
+          uw.nftAddress,
+          uw.nftId,
+          uw.underlyingWorks,
+          uw_shares
         )
-      // if we don't
-      } else {
-        results.push({
-          contentId: uw.id,
-          nftAddress: uw.nftAddress,
-          nftId: uw.nftId,
-          percentage: percentForUw
-        })
-      }
+      )
     })
   } else {
     // add baseContent to results
@@ -146,47 +145,15 @@ function flattenShares(
       contentId: baseContentId,
       nftAddress: baseContentNftAddress,
       nftId: baseContentNftId,
-      percentage: percentScale.mul(100)
+      shares: localTotal_shares
     })
   }
-  
-  // multiply percentages so they sum to totalSharePercent instead of 100
-  let sum = ethers.BigNumber.from("0")
-  results = results.map(share => {
-    const percentage = share.percentage
-      .mul(totalSharePercent)
-      .div(
-        percentScale.mul(100)
-      )
-    sum = sum.add(percentage)
-    return Object.assign(share, {
-      percentage
-    })
-  })
 
   return results
 }
 
-async function calcWindow(): Promise<{ balances: Balance[], merkleTree: MerkleTree }> {
-  // start where previous window ended
-  const startBlockData = (await querySubgraph(`{
-    windows(first: 1, orderBy: blockNumber, orderDirection: desc) {
-      blockNumber
-    }
-  }`))
-
-  let startBlock: number
-
-  // handle the case where there are no previous windows
-  if (startBlockData.data.windows.length > 0) {
-    startBlock = startBlockData.data.windows[0].blockNumber
-  } else {
-    startBlock = 0
-  }
-  
-  // get all revenue events between then and now
-  // TODO: make this recursive
-  const purchases = (await querySubgraph(`{
+function purchasesQuery(startBlock: number): string {
+  return `{
     purchaseEvents(where: {blockNumber_gte: ${startBlock} }) {
       pricePaid
       license {
@@ -237,54 +204,95 @@ async function calcWindow(): Promise<{ balances: Balance[], merkleTree: MerkleTr
         }
       }
     }
-  }`)).data.purchaseEvents
+  }`
+}
 
-  // add up pricePaid for all purchases to find total revenue for the period -- we need this to calc percentages
-  const totalRevenue: ethers.BigNumber = purchases.reduce((total: ethers.BigNumber, purchase: PurchaseEvent) => {
+interface PurchasedContent {
+  contentId: string;
+  nftAddress: string;
+  nftId: string;
+  amount_wei: ethers.BigNumber;
+  underlyingWorks: UnderlyingWork[];
+  revShares: RevShare[];
+}
+
+export async function calcWindow(): Promise<{ balances: Balance[], merkleTree: MerkleTree }> {
+  // start where previous window ended
+  const startBlockData = (await querySubgraph(`{
+    windows(first: 1, orderBy: blockNumber, orderDirection: desc) {
+      blockNumber
+    }
+  }`))
+
+  let startBlock: number
+
+  // handle the case where there are no previous windows
+  if (startBlockData.data.windows.length > 0) {
+    startBlock = startBlockData.data.windows[0].blockNumber
+  } else {
+    startBlock = 0
+  }
+  
+  // get all revenue events between then and now
+  // TODO: make this recursive
+  const purchases = (await querySubgraph(
+    purchasesQuery(startBlock)
+  )).data.purchaseEvents
+
+  // find total revenue
+  const totalRevenue_wei = purchases.reduce((total: ethers.BigNumber, purchase: PurchaseEvent) => {
     return total.add(ethers.BigNumber.from(purchase.pricePaid))
   }, ethers.BigNumber.from("0"))
 
-  // get the scale our contracts use for percentages
-  // we need this because the merkleTree must be constructed using scaled percentages, not raw
-  const percentScale = await getPercentScale()
+  // set up constants
+  PERCENT_SCALE = await getPercentScale()
+  MAX_scaledPercent = PERCENT_SCALE.mul(100)
+  TOTAL_shares = PERCENT_SCALE.mul(100)
 
-  const contentRevShares: { [contentId: string]: ContentRevShare} = {}
+  // group data by unique piece of content that generated revenue
+  const contentRevenue: { [contentId: string]: PurchasedContent} = {}
 
-  // find the share percentages for each piece of content that made revenue
   purchases.forEach((purchase: PurchaseEvent) => {
     const contentId: string = purchase.license.content.id
-    // if not already added, add to the contentRevShares and flatten shares
-    if (!Object.keys(contentRevShares).includes(contentId)) {
-      contentRevShares[contentId] = {
+    // if not already added, add to contentRevenue
+    if (!Object.keys(contentRevenue).includes(contentId)) {
+      contentRevenue[contentId] = {
         contentId,
-        amount: ethers.BigNumber.from(purchase.pricePaid),
-        shares: flattenShares(
-          purchase.license.content.id, 
-          purchase.license.content.nftAddress,
-          purchase.license.content.nftId,
-          purchase.license.content.underlyingWorks,
-          percentScale.mul(100),
-          percentScale
-        )
+        nftAddress: purchase.license.content.nftAddress,
+        nftId: purchase.license.content.nftId,
+        amount_wei: ethers.BigNumber.from(purchase.pricePaid),
+        underlyingWorks: purchase.license.content.underlyingWorks,
+        revShares: []
       }
     // if already added, just add the price paid
     } else {
-      contentRevShares[contentId].amount = contentRevShares[contentId].amount
+      contentRevenue[contentId].amount_wei = contentRevenue[contentId].amount_wei
         .add(ethers.BigNumber.from(purchase.pricePaid))
     }
   })
 
+  // flatten shares for each revenue-generating piece of content
+  Object.keys(contentRevenue).forEach(contentId => {
+    contentRevenue[contentId].revShares = flattenShares(
+      contentId,
+      contentRevenue[contentId].nftAddress,
+      contentRevenue[contentId].nftId,
+      contentRevenue[contentId].underlyingWorks,
+      TOTAL_shares.mul(contentRevenue[contentId].amount_wei).div(totalRevenue_wei)
+    )
+  })
+
+  // organize data by any content that will be shared revenue in the window
   const balanceObj: { [contentId: string]: Balance } = {}
 
-  // arrange data by content and its overall rev share percent
-  for(let i = 0; i < Object.keys(contentRevShares).length; i++) {
-    const contentId = Object.keys(contentRevShares)[i]
+  for(let i = 0; i < Object.keys(contentRevenue).length; i++) {
+    const contentId = Object.keys(contentRevenue)[i]
 
-    for(let j = 0; j < contentRevShares[contentId].shares.length; j++) {
-      const share = contentRevShares[contentId].shares[j]
-      const nftContract = new ethers.Contract(share.nftAddress, abi, provider)
+    for(let j = 0; j < contentRevenue[contentId].revShares.length; j++) {
+      const revShare = contentRevenue[contentId].revShares[j]
+      const nftContract = new ethers.Contract(revShare.nftAddress, abi, provider)
       const account = await nftContract.ownerOf(
-        ethers.BigNumber.from(share.nftId)
+        ethers.BigNumber.from(revShare.nftId)
       )
       if (!balanceObj[account]) {
         balanceObj[account] = {
@@ -293,22 +301,18 @@ async function calcWindow(): Promise<{ balances: Balance[], merkleTree: MerkleTr
         }
       }
       balanceObj[account].allocation = balanceObj[account].allocation
-        .add(
-          share.percentage
-            .mul(contentRevShares[contentId].amount)
-            .div(totalRevenue)
-        )
+        .add(revShare.shares)
     }
   }
 
-  // TODO: check that the total allocation sums to 100%?
+  // create merkle tree
   let total = ethers.BigNumber.from("0")
   const balances: Balance[] = Object.values(balanceObj).map((pb) => {
     total = total.add(pb.allocation)
     return pb
   })
 
-  console.log('expected total, got total:', Number(percentScale.mul(100)), Number(total))
+  console.log('expected total, got total:', Number(MAX_scaledPercent), Number(total))
 
   const merkleTree: MerkleTree = makeMerkleTree(balances.map(bal => toLeaf(bal)))
 
