@@ -51,18 +51,8 @@ async function populatePurchases() {
  * Units (all using ethers.BigNumber type):
  * _wei = currency unit
  * _basisPoints = percentage multiplied by 100 (1 BP = .01 %)
- * _scaledPercent = percentage multiplied by the PERCENT_SCALE
  * _shares = rights to revenue in a window
  */
-
-// the constant used to turn regular percentage into scaled percentage
-let PERCENT_SCALE: ethers.BigNumber
-
-// 100% in "scaled percent" units
-let MAX_scaledPercent: ethers.BigNumber
-
-// total number of shares distributed in a window
-let TOTAL_shares: ethers.BigNumber
 
 interface PurchaseEvent {
   id: string;
@@ -125,7 +115,7 @@ function flattenShares(
       shares: localTotal_shares.sub(uwMax_shares)
     })
 
-    // recursively flatten underlyingWorks shares
+    // recursively flatten underlying works shares
     underlyingWorks.forEach(uw => {
       const uw_basisPoints = ethers.BigNumber.from(uw.revShareLicenses[0].minShareBasisPoints)
       const uw_shares = uwMax_shares.mul(uw_basisPoints).div(uwTotal_basisPoints)
@@ -223,7 +213,6 @@ export async function calcWindow(): Promise<{ balances: Balance[], merkleTree: M
       blockNumber
     }
   }`))
-
   let startBlock: number
 
   // handle the case where there are no previous windows
@@ -244,10 +233,8 @@ export async function calcWindow(): Promise<{ balances: Balance[], merkleTree: M
     return total.add(ethers.BigNumber.from(purchase.pricePaid))
   }, ethers.BigNumber.from("0"))
 
-  // set up constants
-  PERCENT_SCALE = await getPercentScale()
-  MAX_scaledPercent = PERCENT_SCALE.mul(100)
-  TOTAL_shares = PERCENT_SCALE.mul(100)
+  // find total shares (100% * the royalties contract's percent scale)
+  const total_shares = (await getPercentScale()).mul(100)
 
   // group data by unique piece of content that generated revenue
   const contentRevenue: { [contentId: string]: PurchasedContent} = {}
@@ -271,14 +258,14 @@ export async function calcWindow(): Promise<{ balances: Balance[], merkleTree: M
     }
   })
 
-  // flatten shares for each revenue-generating piece of content
+  // find shares for each revenue-generating piece of content and their underlying works
   Object.keys(contentRevenue).forEach(contentId => {
     contentRevenue[contentId].revShares = flattenShares(
       contentId,
       contentRevenue[contentId].nftAddress,
       contentRevenue[contentId].nftId,
       contentRevenue[contentId].underlyingWorks,
-      TOTAL_shares.mul(contentRevenue[contentId].amount_wei).div(totalRevenue_wei)
+      total_shares.mul(contentRevenue[contentId].amount_wei).div(totalRevenue_wei)
     )
   })
 
@@ -312,7 +299,7 @@ export async function calcWindow(): Promise<{ balances: Balance[], merkleTree: M
     return pb
   })
 
-  console.log('expected total, got total:', Number(MAX_scaledPercent), Number(total))
+  console.log('expected total, got total:', Number(total_shares), Number(total))
 
   const merkleTree: MerkleTree = makeMerkleTree(balances.map(bal => toLeaf(bal)))
 
