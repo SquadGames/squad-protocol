@@ -140,7 +140,7 @@ function flattenShares(
       )
     })
   } else {
-    // add baseContent to results
+    // add base content to results
     results.push({
       contentId: baseContentId,
       nftAddress: baseContentNftAddress,
