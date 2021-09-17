@@ -117,8 +117,12 @@ function flattenShares(
 
     // recursively flatten underlying works shares
     underlyingWorks.forEach(uw => {
+      // rev share this work asks for
       const uw_basisPoints = ethers.BigNumber.from(uw.revShareLicenses[0].minShareBasisPoints)
+
+      // this work's portion of shares based on its ask compared to its sibling underlying works' asks
       const uw_shares = uwMax_shares.mul(uw_basisPoints).div(uwTotal_basisPoints)
+      
       results = results.concat(
         flattenShares(
           uw.id,
