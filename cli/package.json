@@ -1,0 +1,38 @@
+{
+  "name": "@squad/cli",
+  "version": "0.0.1-dev",
+  "description": "Command line interface to the Squad content network",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "author": "Jesse B. Miller",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "jest": "^27.2.0",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "ts-standard": "^10.0.0",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "lint": "ts-standard",
+    "format": "ts-standard --fix",
+    "test": "yarn build && jest --collect-coverage && yarn lint",
+    "test-only": "yarn build && jest"
+  },
+  "ts-standard": {
+    "globals": [
+      "test",
+      "expect",
+      "beforeEach"
+    ],
+    "ignore": ["dist"]
+  },
+  "dependencies": {
+    "@apollo/client": "^3.4.11",
+    "@web3api/client-js": "^0.0.1-prealpha.43",
+    "axios": "^0.21.4",
+    "cross-fetch": "^3.1.4",
+    "yargs": "^17.1.1"
+  }
+}
