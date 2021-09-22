@@ -131,7 +131,7 @@ describe("Squad Content Network", () => {
   })
 
   test("Registers new NFTs for rev share content", async () => {
-    const result = await client.query<{ registerPurchasableContent: TxResponse }>({
+    const result = await client.query<{ registerRevShareContent: TxResponse }>({
       uri: squadUri,
       query: `
           mutation registerRevShareContent {

@@ -8,8 +8,11 @@
   },
   "dependencies": {
     "@apollo/client": "^3.4.11",
-    "@web3api/client-js": "^0.0.1-prealpha.40",
-    "@web3api/react": "^0.0.1-prealpha.40",
+    "@web3api/client-js": "^0.0.1-prealpha.43",
+    "@web3api/ens-plugin-js": "^0.0.1-prealpha.43",
+    "@web3api/ethereum-plugin-js": "^0.0.1-prealpha.43",
+    "@web3api/ipfs-plugin-js": "^0.0.1-prealpha.43",
+    "@web3api/react": "^0.0.1-prealpha.43",
     "axios": "^0.21.4",
     "graphql": "^15.5.3",
     "react": "^17.0.0",

@@ -1,13 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, ChangeEvent } from 'react'
 import { gql, useQuery } from '@apollo/client'
-import { Web3ApiClient } from '@web3api/client-js'
 
-export function ContentPage({ sendQuery }) {
+export function ContentPage() {
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [pageNumber, setPageNumber] = useState(0)
 
-  function handleItemsPerPageChange(event) {
-    setItemsPerPage(event.target.value)
+  function handleItemsPerPageChange(event: ChangeEvent<HTMLInputElement>) {
+    setItemsPerPage(parseInt(event.currentTarget.value))
   }
 
   return (
@@ -36,7 +35,7 @@ export function ContentPage({ sendQuery }) {
 
 
 
-export function ContentList({ first, skip }) {
+export function ContentList({ first, skip }: { first: number, skip: number }) {
   const query = gql`
 {squadNFTs (first: ${first}, skip: ${skip}) {
   id
@@ -50,7 +49,7 @@ export function ContentList({ first, skip }) {
   if (loading) return <p>loading ...</p>
   if (error) return <p>Error :/</p>
 
-  return data.squadNFTs.map((content) => {
+    const items = data.squadNFTs.map((content: any) => {
     return (
       <li key={content.id}>
         ID: {content.id} <br />

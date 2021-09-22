@@ -13,7 +13,8 @@
     "subgraph",
     "wallet-connect",
     "lib",
-    "react"
+    "react",
+    "cli"
   ],
   "scripts": {
     "up": "./scripts/up_dev.sh && yarn build && yarn deploy",
