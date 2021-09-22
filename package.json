@@ -10,6 +10,7 @@
   "workspaces": [
     "hardhat",
     "polywrap",
+    "royalties-script",
     "subgraph",
     "wallet-connect",
     "lib"
