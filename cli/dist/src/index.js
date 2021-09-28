@@ -24,8 +24,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.content = exports.registerPurchasableContent = exports.registerRevShareContent = exports.version = void 0;
-const yargs_1 = __importDefault(require("yargs"));
-const helpers_1 = require("yargs/helpers");
 const package_json_1 = __importDefault(require("../package.json"));
 const client_js_1 = require("@web3api/client-js");
 const ethereum_plugin_js_1 = require("@web3api/ethereum-plugin-js");
@@ -284,6 +282,3 @@ const commands = {
     content,
     help
 };
-const argv = (0, yargs_1.default)((0, helpers_1.hideBin)(process.argv)).argv;
-console.log(Object.keys(argv));
-//console.log(command(argv))

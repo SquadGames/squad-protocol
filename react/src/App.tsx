@@ -11,27 +11,72 @@ import {
   ApolloProvider,
 } from "@apollo/client"
 
-import { Web3ApiClient } from '@web3api/client-js'
+import { MetaMaskProvider } from "metamask-react"
+
+import { Web3ApiProvider } from '@web3api/react'
 import { ethereumPlugin } from "@web3api/ethereum-plugin-js"
 import { ipfsPlugin } from "@web3api/ipfs-plugin-js"
 import { ensPlugin } from "@web3api/ens-plugin-js"
-
-console.log(Web3ApiClient)
+import { graphNodePlugin } from '@web3api/graph-node-plugin-js'
+import { PluginPackage } from '@web3api/client-js'
 
 const apolloClient = new ApolloClient({
   uri: 'http://localhost:8000/subgraphs/name/squadgames/squad-POC-subgraph',
   cache: new InMemoryCache()
 })
 
+async function getPolywrapPlugins(signer: number = 0) {
+  // fetch providers from dev server
+  return [
+    {
+      uri: "/ens/ens.web3api.eth",
+      plugin: ensPlugin({
+        addresses: {
+          testnet: "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab"
+        }
+      })
+    },
+    {
+      uri: "/ens/ethereum.web3api.eth",
+      plugin: ethereumPlugin({
+        networks: {
+          testnet: {
+            provider: "http://localhost:8545",
+            signer: signer
+          }
+        },
+        // If defaultNetwork is not specified, mainnet will be used.
+        defaultNetwork: "testnet"
+      })
+    },
+    {
+      uri: "/ens/ipfs.web3api.eth",
+      plugin: ipfsPlugin({
+        provider: "http://localhost:5001"
+      }),
+    },
+    {
+      uri: '/ens/graph-node.web3api.eth',
+      plugin: graphNodePlugin({
+        provider: "http://localhost:8000/subgraphs/name/squadgames/squad-POC-subgraph/"
+      }),
+    },
+  ]
+}
+
+
 function App() {
-  const [polywrapPlugins, setPolywrapPlugins] = useState([])
 
-  console.log(polywrapPlugins)
+  const [polywrapPlugins, setPolywrapPlugins] = useState(
+    [] as { uri: string; plugin: PluginPackage }[]
+  )
+
   if (polywrapPlugins.length === 0) {
-    return <p>Loading Polywrap Plugins...</p>
+    getPolywrapPlugins().then((plugins) => {
+      setPolywrapPlugins(plugins)
+    })
+    return <p>Loading polywrap plugins...</p>
   }
-
-  console.log(polywrapPlugins)
 
   return (
     <div className="App">
@@ -39,9 +84,15 @@ function App() {
         <p>Squad Content Directory</p>
       </header>
 
-      <ApolloProvider client={apolloClient}>
+      <MetaMaskProvider>
+        <Web3ApiProvider plugins={polywrapPlugins}>
+          <ContentPage />
+        </Web3ApiProvider>
+      </MetaMaskProvider>
+
+      {/*`<ApolloProvider client={apolloClient}>
         <ContentPage />
-      </ApolloProvider>
+      <ApolloProvider>`*/}
 
     </div>
   )

@@ -1,5 +1,7 @@
 import React, { useState, ChangeEvent } from 'react'
 import { gql, useQuery } from '@apollo/client'
+import { useWeb3ApiQuery } from '@web3api/react'
+import { useMetaMask } from "metamask-react";
 
 export function ContentPage() {
   const [itemsPerPage, setItemsPerPage] = useState(25)
@@ -36,33 +38,62 @@ export function ContentPage() {
 
 
 export function ContentList({ first, skip }: { first: number, skip: number }) {
+
+  const { status, connect, account } = useMetaMask();
+
   const query = gql`
-{squadNFTs (first: ${first}, skip: ${skip}) {
-  id
-  creator
-  contentURI
-  metadataURI
-}}
-  `
-  const { loading, error, data } = useQuery(query)
+          mutation holdsLicense {
+            holdsLicense(
+              contractAddress: $contractAddress
+              nftAddress: $nftAddress
+              nftId: $nftId
+              holder: $holder
+            )
+          }`
 
-  if (loading) return <p>loading ...</p>
-  if (error) return <p>Error :/</p>
+  const variables = {
+    creatorAddress: account,
+    contractAddress: "0x26b4AFb60d6C903165150C6F0AA14F8016bE4aec",
+    nftAddress: "0x2612Af3A521c2df9EAF28422Ca335b04AdF3ac66",
+    nftId: "1",
+    holder: account,
+  }
 
-    const items = data.squadNFTs.map((content: any) => {
-    return (
-      <li key={content.id}>
-        ID: {content.id} <br />
-        Creator: {content.creator} <br />
-        contentURI: {content.contentURI} <br />
-        metadataURI: {content.metadataURI} <br />
-      </li>
-    )
-  })
+  const { data, errors, loading } = useWeb3ApiQuery<{
+    registerPurchasableContent: any
+  }>({
+    uri: '/ens/testnet/squadprotocol.eth',
+    query,
+    variables,
+  });
+
+  console.log(status)
+
+  if (status === "initializing") {
+    return <div>Synchronisation with MetaMask ongoing...</div>
+  }
+  if (status === "unavailable") {
+    return <div>MetaMask not available</div>
+  }
+  if (status === "notConnected") {
+    return <button onClick={connect}>Connect to MetaMask</button>
+  }
+  if (status === "connecting") {
+    return <div>Connecting...</div>
+  }
+  if (status !== "connected") {
+    return <p>Unable to connect to MetaMask</p>
+  }
+
+  console.log("connected account", account)
+
+  if (loading) { return <p>loading ...</p> }
+  if (errors !== undefined) { return <p>Error :/</p> }
+  if (data === undefined) { return <p>No content found.</p> }
 
   return (
-    <div className="content-list">
-      <ul>{items}</ul>
+    <div>
+      { data }
     </div>
   )
 }
