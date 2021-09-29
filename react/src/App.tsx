@@ -32,7 +32,7 @@ async function getPolywrapPlugins(signer: number = 0) {
       uri: "/ens/ens.web3api.eth",
       plugin: ensPlugin({
         addresses: {
-          testnet: "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab"
+          testnet: "0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe"
         }
       })
     },
@@ -58,7 +58,7 @@ async function getPolywrapPlugins(signer: number = 0) {
     {
       uri: '/ens/graph-node.web3api.eth',
       plugin: graphNodePlugin({
-        provider: "http://localhost:8000/subgraphs/name/squadgames/squad-POC-subgraph/"
+        provider: "http://localhost:8000",
       }),
     },
   ]
@@ -86,13 +86,12 @@ function App() {
 
       <MetaMaskProvider>
         <Web3ApiProvider plugins={polywrapPlugins}>
-          <ContentPage />
+          <ApolloProvider client={apolloClient}>
+            <ContentPage />
+          </ApolloProvider>
         </Web3ApiProvider>
       </MetaMaskProvider>
 
-      {/*`<ApolloProvider client={apolloClient}>
-        <ContentPage />
-      <ApolloProvider>`*/}
 
     </div>
   )

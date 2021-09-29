@@ -3064,7 +3064,7 @@
     "@web3api/core-js" "0.0.1-prealpha.45"
     ethers "5.0.7"
 
-"@web3api/graph-node-plugin-js@^0.0.1-prealpha.43":
+"@web3api/graph-node-plugin-js@^0.0.1-prealpha.43", "@web3api/graph-node-plugin-js@^0.0.1-prealpha.45":
   version "0.0.1-prealpha.45"
   resolved "https://registry.yarnpkg.com/@web3api/graph-node-plugin-js/-/graph-node-plugin-js-0.0.1-prealpha.45.tgz#b169b2d3b88e97723954ceafc26fbe10230ad523"
   integrity sha512-QUJh5uj8/6uKbAJfBqSCDvuzYzw3odCcXPO6n6VpnHq27iknrknn0KAbR5+VzrcAko5BCjzH6ZjY6gBpa0vEag==

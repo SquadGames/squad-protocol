@@ -315,7 +315,7 @@ export interface ContentInput {
 export async function content ({
   first = 100,
   skip = 0,
-  type,
+  _type,
   nftAddress,
   nftId,
   id
@@ -332,7 +332,7 @@ export async function content ({
         first: $first
         skip: $skip
         where: {
-          ${type ? 'type: $type' : ''}
+          ${_type ? 'type: $_type' : ''}
           ${nftAddress ? 'nftAddress: $nftAddress' : ''}
           ${id ? 'id: $id' : ''}
         }

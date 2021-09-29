@@ -40,34 +40,46 @@ export function ContentPage() {
 export function ContentList({ first, skip }: { first: number, skip: number }) {
 
   const { status, connect, account } = useMetaMask();
+  const [_type, setType] = useState(undefined as string | undefined)
+  const [nftAddress, setNftAddress] = useState(undefined as string | undefined)
+  const [id, setId] = useState(undefined as string | undefined)
 
-  const query = gql`
-          mutation holdsLicense {
-            holdsLicense(
-              contractAddress: $contractAddress
-              nftAddress: $nftAddress
-              nftId: $nftId
-              holder: $holder
-            )
-          }`
+  const contents = gql`
+    query Contents(
+      $first: Int,
+      $skip: Int,
+      $type: String,
+      $nftAddress: String,
+      $id: String,
+    ) {
+      contents (
+        first: $first
+        skip: $skip
+        where: {
+          ${_type ? 'type: $type' : ''}
+          ${nftAddress ? 'nftAddress: $nftAddress' : ''}
+          ${id ? 'id: $id' : ''}
+        }
+      ) {
+        id
+        nftAddress
+        nftId
+        type
+        underlyingWorks {
+          id
+        }
+        purchasableLicenses {
+   	  id
+        }
+        revShareLicenses {
+          id
+        }
+      }
+  }`
 
-  const variables = {
-    creatorAddress: account,
-    contractAddress: "0x26b4AFb60d6C903165150C6F0AA14F8016bE4aec",
-    nftAddress: "0x2612Af3A521c2df9EAF28422Ca335b04AdF3ac66",
-    nftId: "1",
-    holder: account,
-  }
-
-  const { data, errors, loading } = useWeb3ApiQuery<{
-    registerPurchasableContent: any
-  }>({
-    uri: '/ens/testnet/squadprotocol.eth',
-    query,
-    variables,
-  });
-
-  console.log(status)
+  const { loading, error, data } = useQuery<{ contents: any[] }>(contents, {
+    variables: { first, skip, _type, nftAddress, id }
+  })
 
   if (status === "initializing") {
     return <div>Synchronisation with MetaMask ongoing...</div>
@@ -85,15 +97,24 @@ export function ContentList({ first, skip }: { first: number, skip: number }) {
     return <p>Unable to connect to MetaMask</p>
   }
 
-  console.log("connected account", account)
-
   if (loading) { return <p>loading ...</p> }
-  if (errors !== undefined) { return <p>Error :/</p> }
-  if (data === undefined) { return <p>No content found.</p> }
+  if (error !== undefined) {
+    console.error("Error: could not get content", error)
+    return <p>Error: could not get content</p>
+  }
+  if (data === undefined) {
+    return <p>No content found.</p>
+  }
+
+  const contentElements = (data?.contents ?? []).map((c) => {
+    return (
+      <li key={c.id}>{ c.nftId } { c.nftAddress } { c.type }</li>
+    )
+  })
 
   return (
-    <div>
-      { data }
-    </div>
+    <ul>
+      { contentElements }
+    </ul>
   )
 }
