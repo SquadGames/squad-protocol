@@ -35,6 +35,33 @@ const cross_fetch_1 = __importDefault(require("cross-fetch"));
 const lib_1 = require("@squad/lib");
 const ethers_1 = require("ethers");
 const fs = __importStar(require("fs"));
+/*/ TODO move TxResponse interface from tests to lib
+interface TxResponse {
+  hash: string
+  to?: string
+  from: string
+  nonce: number
+  gasLimit: string
+  gasPrice: string
+  data: string
+  value: string
+  chainId: number
+  blockNumber?: string
+  blockHash?: string
+  timestamp?: number
+  confirmations: number
+  raw?: string
+  r?: string
+  s?: string
+  v?: number
+  type?: number
+  accessList?: Access[]
+}
+
+export interface Access {
+  address: string
+  storageKeys: string[]
+} */
 const apollo = new client_1.ApolloClient({
     link: new client_1.HttpLink({
         uri: 'http://localhost:8000/subgraphs/name/squadgames/squad-POC-subgraph',
@@ -233,7 +260,7 @@ function displayContent(content) {
         `${content.revShareLicenses.length > 0 ? ' deriveable' : ''}` +
         `${content.purchasableLicenses.length > 0 ? ' purchasable' : ''}`;
 }
-async function content({ first = 100, skip = 0, type, nftAddress, nftId, id }) {
+async function content({ first = 100, skip = 0, _type, nftAddress, nftId, id }) {
     const query = (0, client_1.gql) `
     query Contents(
       $first: Int,
@@ -246,7 +273,7 @@ async function content({ first = 100, skip = 0, type, nftAddress, nftId, id }) {
         first: $first
         skip: $skip
         where: {
-          ${type ? 'type: $type' : ''}
+          ${_type ? 'type: $type' : ''}
           ${nftAddress ? 'nftAddress: $nftAddress' : ''}
           ${id ? 'id: $id' : ''}
         }
@@ -268,7 +295,7 @@ async function content({ first = 100, skip = 0, type, nftAddress, nftId, id }) {
     }`;
     const response = await apollo.query({
         query: query,
-        variables: { first, skip, type, nftAddress, id }
+        variables: { first, skip, type: _type, nftAddress, id }
     });
     return response.data.contents.map(displayContent).join('\n');
 }

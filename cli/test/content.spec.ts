@@ -54,7 +54,7 @@ describe('content', () => {
   })
 
   test('returns content by type', async () => {
-    const got = await content({ type: uniqueType })
+    const got = await content({ _type: uniqueType })
     const lines = got.split('\n')
     expect(lines.length).toBe(2)
     const line = lines[0]

@@ -18,37 +18,9 @@ import {
 import fetch from 'cross-fetch'
 
 import { getConfig, getSecrets } from '@squad/lib'
-import { ethers, Contract } from 'ethers'
+import { ethers, Contract, Transaction } from 'ethers'
 
 import * as fs from 'fs'
-
-// TODO move TxResponse interface from tests to lib
-interface TxResponse {
-  hash: string
-  to?: string
-  from: string
-  nonce: number
-  gasLimit: string
-  gasPrice: string
-  data: string
-  value: string
-  chainId: number
-  blockNumber?: string
-  blockHash?: string
-  timestamp?: number
-  confirmations: number
-  raw?: string
-  r?: string
-  s?: string
-  v?: number
-  type?: number
-  accessList?: Access[]
-}
-
-export interface Access {
-  address: string
-  storageKeys: string[]
-}
 
 const apollo = new ApolloClient({
   link: new HttpLink({
@@ -58,7 +30,7 @@ const apollo = new ApolloClient({
   cache: new InMemoryCache()
 })
 
-// TODO don't default to localhost eth provider
+// TODO don't hardcode localhost network
 const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545')
 
 async function getPolywrap (signer: number = 0) {
@@ -243,7 +215,7 @@ export async function registerPurchasableContent (
 
   const polywrap = await getPolywrap()
   const response = await polywrap.query<{
-    registerPurchasableContent: TxResponse
+    registerPurchasableContent: Transaction//TxResponse
   }>({ uri: squadUri, query, variables })
   if (response.errors !== undefined) {
     throw new Error(response.errors.join('\n\n'))
@@ -306,7 +278,7 @@ function displayContent (content: Content) {
 export interface ContentInput {
   first?: number
   skip?: number
-  type?: string
+  _type?: string
   nftAddress?: string
   nftId?: number
   id?: string
@@ -332,7 +304,7 @@ export async function content ({
         first: $first
         skip: $skip
         where: {
-          ${_type ? 'type: $_type' : ''}
+          ${_type ? 'type: $type' : ''}
           ${nftAddress ? 'nftAddress: $nftAddress' : ''}
           ${id ? 'id: $id' : ''}
         }
@@ -354,7 +326,7 @@ export async function content ({
     }`
   const response = await apollo.query<{ contents: Content[]}>({
     query: query,
-    variables: { first, skip, type, nftAddress, id }
+    variables: { first, skip, type: _type, nftAddress, id }
   })
 
   return response.data.contents.map(displayContent).join('\n')

@@ -33,7 +33,7 @@ describe('content', () => {
     });
     test('returns content by type', async () => {
         var _a, _b;
-        const got = await (0, src_1.content)({ type: uniqueType });
+        const got = await (0, src_1.content)({ _type: uniqueType });
         const lines = got.split('\n');
         expect(lines.length).toBe(2);
         const line = lines[0];
