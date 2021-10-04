@@ -12,7 +12,9 @@
     "polywrap",
     "subgraph",
     "wallet-connect",
-    "lib"
+    "lib",
+    "react",
+    "cli"
   ],
   "scripts": {
     "up": "./scripts/up_dev.sh && yarn build && yarn deploy",

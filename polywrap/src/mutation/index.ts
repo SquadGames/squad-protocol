@@ -81,32 +81,33 @@ export function registerPurchasableNFTContent(
  return res
 }
 
+function handleBufferContent(content: ArrayBuffer, hash: string | null): ContentInfo {
+  const uri = Ipfs_Mutation.addFile({ data: content })
+  const sha3 = `0x${Sha3_Query.buffer_keccak_256({ message: content })}`
+  // REMINDER asemblyscript uses === for identity comparison not equality :/
+  if (sha3 != hash && hash != null) {
+    hash = hash == null ? "never" : hash! // type narrowing
+    throw new Error(`SHA3 hash missmatch. got ${hash}, expected ${sha3}`)
+  }
+  return { uri, sha3 }
+}
 
 function handleBase64StringContent(content: string, hash: string | null): ContentInfo {
   const data = b64.decode(content).buffer
-  const uri = Ipfs_Mutation.addFile({ data })
-  const sha3 = Sha3_Query.buffer_keccak_256({ message: data })
-  if (sha3 !== hash && hash !== null) {
-    throw new Error("hash missmatch, are you using sha3?")
-  }
-  return { uri, sha3 }
+  return handleBufferContent(data, hash)
 }
 
 function handleUTF8StringContent(content: string, hash: string | null): ContentInfo {
   const data = String.UTF8.encode(content)
-  const uri = Ipfs_Mutation.addFile({ data })
-  const sha3 = Sha3_Query.buffer_keccak_256({ message: data })
-  if (sha3 !== hash && hash !== null) {
-    throw new Error("hash missmatch, are you using sha3?")
-  }
-  return { uri, sha3 }
+  return handleBufferContent(data, hash)
 }
 
 
 function handleURIContent(content: string, hash: string | null): ContentInfo {
-  if (hash === null) {
+  if (hash == null) {
     throw new Error("hash required for URI MediaType")
   }
+  hash = hash == null ? "never" : hash! // type narrowing
   return { uri: content, sha3: hash }
 }
 
