@@ -86,7 +86,7 @@ describe('content', () => {
       nftAddress: config.contracts.ERC721Squad.address
     })
     const lines = got.split('\n')
-    expect(lines.length).toBeGreaterThan(3)
+    expect(lines.length).toBeGreaterThan(2)
     const line = lines[1]
     if (line === undefined) {
       throw new Error('never')

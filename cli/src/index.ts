@@ -79,8 +79,7 @@ async function getPolywrap (signer: number = 0) {
   })
 }
 
-const squadUri = '/ens/testnet/squadprotocol.eth'
-
+// TODO support hardware wallets
 // TODO support standard wallet storage format
 async function getWallet (): Promise<ethers.Wallet> {
   const secrets = await getSecrets()
@@ -216,7 +215,7 @@ export async function registerPurchasableContent (
   const polywrap = await getPolywrap()
   const response = await polywrap.query<{
     registerPurchasableContent: Transaction//TxResponse
-  }>({ uri: squadUri, query, variables })
+  }>({ uri: config.polywrapUri, query, variables })
   if (response.errors !== undefined) {
     throw new Error(response.errors.join('\n\n'))
   }
@@ -280,7 +279,6 @@ export interface ContentInput {
   skip?: number
   _type?: string
   nftAddress?: string
-  nftId?: number
   id?: string
 }
 
@@ -289,7 +287,6 @@ export async function content ({
   skip = 0,
   _type,
   nftAddress,
-  nftId,
   id
 }: ContentInput): Promise<string> {
   const query = gql`

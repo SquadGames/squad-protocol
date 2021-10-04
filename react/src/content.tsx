@@ -35,9 +35,119 @@ export function ContentPage() {
   )
 }
 
+interface RegisterPurchasableContentProps {
+  account: string
+  licenseManagerAddress: string
+}
 
+export function RegisterPurchasableContent(
+  { account, licenseManagerAddress }: RegisterPurchasableContentProps
+) {
 
-export function ContentList({ first, skip }: { first: number, skip: number }) {
+  const query = gql`
+  mutation registerPurchasableContent {
+    registerPurchasableContent(
+      creatorAddress: $creatorAddress
+      licenseManagerAddress: $licenseManagerAddress
+      contentMedium: $contentMedium
+      content: $content
+      contentHash: $contentHash
+      metadataMedium: $metadataMedium
+      metadata: $metadata
+      metadataHash: $metadataHash
+      registrant: $registrant
+      data: $data
+      price: $price
+      sharePercentage: $sharePercentage
+    )
+  }`
+
+  const [content, setContent] = useState("")
+  const [metadata, setMetadata] = useState("")
+  const [price, setPrice] = useState(0)
+  const [data, setData] = useState("")
+
+  const defaultVars = {
+      creatorAddress: account,
+      licenseManagerAddress,
+      registrant: account,
+      contentMedium: "UTF8_STRING",
+      contentHash: "AUTO",
+      metadataMedium: "UTF8_STRING",
+      metadataHash: "AUTO",
+      sharePercentage: "0",
+  }
+
+  const { execute, data: responseData, errors, loading } = useWeb3ApiQuery({
+    uri: 'ens/testnet/squadprotocol.eth',
+    query,
+    variables: Object.assign({}, defaultVars, {
+      content,
+      metadata,
+      price,
+      data
+    })
+  })
+
+  if (responseData !== undefined) {
+    console.log("Response Data", responseData)
+    return <p>{JSON.stringify(responseData)}</p>
+  }
+
+  if (errors !== undefined) {
+    console.log("Errors", errors, JSON.stringify(errors))
+    return <p>ERROR! check the console</p>
+  }
+
+  if (loading) {
+    console.log("loading")
+    return <p>Loading...</p>
+  }
+
+  function handleSubmit(event: ChangeEvent<HTMLFormElement>) {
+    console.log("submitted", event)
+    if(event) {
+      execute()
+    }
+  }
+
+  function handleWith(setter: React.Dispatch<React.SetStateAction<any>>) {
+    return (event: ChangeEvent<HTMLInputElement>) => {
+      console.log("handling", event?.target.value)
+      setter(event?.target.value)
+    }
+  }
+
+  // { "type": "string", "underlyingWorks": [] }
+
+  return (
+    <div className="register-purchasable-content">
+      <form onSubmit={handleSubmit}>
+        <label>Content</label>
+        <input className="content-input" onChange={handleWith(setContent)} />
+        <label>Metadata</label>
+        <input className="metadata-input" onChange={handleWith(setMetadata)} />
+        <label>price</label>
+        <input className="price-input" onChange={handleWith(setPrice)} />
+        <label>data</label>
+        <input className="data-input" onChange={handleWith(setData)} />
+        <button type="submit" className="register-purchasable-content-submit">
+          Submit
+        </button>
+      </form>
+    </div>
+  )
+}
+
+interface ContentListProps {
+  first: number
+  skip: number
+}
+
+export function ContentList({
+  first,
+  skip,
+}: ContentListProps) {
 
   const { status, connect, account } = useMetaMask();
   const [_type, setType] = useState(undefined as string | undefined)
@@ -112,9 +222,20 @@ export function ContentList({ first, skip }: { first: number, skip: number }) {
     )
   })
 
+  if (account === null) {
+    return <button onClick={connect}>Connect to MetaMask</button>
+  }
+
+  // TODO make UI read from config
   return (
-    <ul>
-      { contentElements }
-    </ul>
+    <div className="content">
+      <ul>
+        { contentElements }
+      </ul>
+      <RegisterPurchasableContent
+        account={account}
+        licenseManagerAddress="0x630589690929E9cdEFDeF0734717a9eF3Ec7Fcfe"
+        />
+    </div>
   )
 }
